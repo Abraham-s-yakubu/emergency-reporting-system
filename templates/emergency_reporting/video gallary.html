@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuardianLink - Video Gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Reused styles from the main app for consistency */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* bg-gray-50 */
+            color: #1f2937; /* text-gray-900 */
+        }
+
+        /* Mobile navigation styles */
+        .mobile-nav {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-out;
+            z-index: 100;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 64%;
+            max-width: 250px;
+            background-color: #e2e8f0;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            padding-top: 5rem;
+            display: flex;
+                flex-direction: column;
+        }
+
+        .mobile-nav.open {
+            transform: translateX(0);
+        }
+
+        /* Filter specific styles */
+        .filter-button {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px; /* Full rounded */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #cbd5e1; /* gray-300 */
+            background-color: #e2e8f0; /* gray-200 */
+            color: #4b5563; /* gray-700 */
+        }
+
+        .filter-button.active {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            border-color: #3b82f6;
+            box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+        }
+
+        .filter-button:hover:not(.active) {
+            background-color: #d1d5db; /* gray-300 */
+            color: #1f2937; /* gray-900 */
+        }
+
+        .video-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            /* No cursor: pointer here as iframe is interactive */
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+        }
+
+        /* Aspect ratio container for responsive video embeds */
+        .video-embed-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (height / width = 9 / 16 = 0.5625) */
+            height: 0;
+            overflow: hidden;
+            background-color: #000; /* Black background for video area */
+        }
+
+        .video-embed-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .video-info {
+            padding: 1rem;
+        }
+
+        .video-title {
+            font-weight: 600;
+            font-size: 1.125rem; /* text-lg */
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .video-category {
+            font-size: 0.875rem; /* text-sm */
+            color: #4b5563; /* gray-700 */
+            margin-bottom: 0.5rem;
+        }
+
+        .video-description {
+            font-size: 0.875rem; /* text-sm */
+            color: #6b7280; /* gray-500 */
+            line-height: 1.4;
+        }
+
+        /* Highlight style for search terms */
+        .highlight {
+            background-color: #fffb00; /* Bright yellow background for highlight */
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-6 md:p-8">
+
+    <header class="w-full max-w-4xl flex justify-between items-center py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg sticky top-0 z-50 rounded-b-xl">
+        <div class="flex items-center space-x-3">
+            <button id="menu-button" class="text-white hover:text-blue-100 focus:outline-none"
+                    aria-haspopup="true" aria-expanded="false" aria-controls="mobile-nav">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                    <line x1="4" y1="12" x2="20" y2="12"></line>
+                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                    <line x1="4" y1="18" x2="20" y2="18"></line>
+                </svg>
+            </button>
+            <div class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check">
+                    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C6.5 20.5 3 18 3 13V6a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+                    <path d="m9 12 2 2 4-4"></path>
+                </svg>
+                <h1 class="text-xl sm:text-2xl font-bold text-white">GuardianLink</h1>
+            </div>
+        </div>
+        <!-- Removed New Chat button as it's specific to chatbot page -->
+    </header>
+
+    <nav id="mobile-nav" class="mobile-nav" role="navigation">
+        <button id="close-nav-button" class="absolute top-4 right-4 text-gray-600 hover:text-gray-900 focus:outline-none p-1 rounded-full hover:bg-gray-300 transition-colors duration-200"
+                aria-label="Close navigation menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+            </svg>
+        </button>
+        <ul class="space-y-2 px-6 mt-4 w-full">
+            <li>
+                <a href="index.html" class="flex items-center space-x-3 py-2 px-3 rounded-lg text-gray-700 text-lg hover:bg-gray-300 transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell">
+                        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+                    </svg>
+                    <span>Emergency Report</span>
+                </a>
+            </li>
+            <li>
+                <a href="chatbot.html" class="flex items-center space-x-3 py-2 px-3 rounded-lg text-gray-700 text-lg hover:bg-gray-300 transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle">
+                        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+                    </svg>
+                    <span>Chatbot</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="flex items-center space-x-3 py-2 px-3 rounded-lg text-gray-900 text-lg font-semibold bg-blue-100 hover:bg-blue-200 transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-video ring-2 ring-blue-500 rounded-full p-0.5">
+                        <path d="m22 8-6 4 6 4V8Z"></path><rect width="14" height="12" x="1" y="6" rx="2" ry="2"></rect>
+                    </svg>
+                    <span>Video Gallery (Current)</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <main class="flex flex-col items-center flex-grow mt-8 mb-8 w-full max-w-4xl">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8">Video Gallery</h2>
+
+        <!-- Filter Section -->
+        <div class="w-full bg-white rounded-lg shadow-md p-4 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Filter Videos</h3>
+                <div class="relative w-full sm:w-1/2">
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Search by title or description..."
+                        class="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                        oninput="window.debouncedFilterVideos()"
+                    />
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+
+            <div id="category-filters" class="flex flex-wrap gap-2 justify-center sm:justify-start">
+                <button class="filter-button active" data-category="All" onclick="filterVideos('All')">All</button>
+                <!-- Category buttons will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Video Grid -->
+        <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+            <!-- Video cards will be dynamically loaded here by JavaScript -->
+        </div>
+
+        <p id="no-results-message" class="text-gray-600 text-lg mt-8 hidden">No videos found matching your criteria.</p>
+    </main>
+
+    <footer class="w-full max-w-4xl text-center text-gray-500 text-xs sm:text-sm py-8 mt-auto">
+        <p>Stay informed, stay safe with GuardianLink.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const menuButton = document.getElementById('menu-button');
+            const mobileNav = document.getElementById('mobile-nav');
+            const closeNavButton = document.getElementById('close-nav-button');
+            const categoryFiltersContainer = document.getElementById('category-filters');
+            const videoGrid = document.getElementById('video-grid');
+            const searchInput = document.getElementById('search-input');
+            const noResultsMessage = document.getElementById('no-results-message');
+
+            // --- Video Data (using provided YouTube video IDs) ---
+            const videoData = [
+                {
+                    id: 'v1',
+                    title: 'Fire Safety Basics',
+                    category: 'Fire',
+                    description: 'Essential tips for preventing fires and what to do in case of a small fire.',
+                    videoId: 'V4x1BhsrZeY',
+                    type: 'youtube'
+                },
+                {
+                    id: 'v2',
+                    title: 'Road Accident Response',
+                    category: 'Accident',
+                    description: 'A guide on how to safely respond to a road traffic accident and assist victims.',
+                    videoId: 'FubZWxLnfd8',
+                    type: 'youtube'
+                },
+                {
+                    id: 'v3',
+                    title: 'Flood Preparedness in Nigeria',
+                    category: 'Flood',
+                    description: 'Important steps to take before, during, and after a flood in Nigerian communities.',
+                    videoId: 'IisqrLOnqX8',
+                    type: 'youtube'
+                },
+                {
+                    id: 'v4',
+                    title: 'Emergency Medical First Aid',
+                    category: 'Medical',
+                    description: 'Basic first aid techniques for common medical emergencies like cuts and burns.',
+                    videoId: 'MNvGqxAIGFo',
+                    type: 'youtube'
+                },
+                {
+                    id: 'v5',
+                    title: 'Security Awareness Tips',
+                    category: 'Security',
+                    description: 'Tips for personal security and reporting suspicious activities to authorities.',
+                    videoId: 'IisqrLOnqX8',
+                    type: 'youtube'
+                },
+                {
+                    id: 'v6',
+                    title: 'Building Collapse Evacuation',
+                    category: 'Building Collapse',
+                    description: 'What to do if you are in or near a collapsing building. Safety protocols.',
+                    videoId: 'V4x1BhsrZeY',
+                    type: 'youtube'
+                },
+                {
+                    id: 'v7',
+                    title: 'Natural Disaster Survival',
+                    category: 'Disaster Prep',
+                    description: 'General guidelines for surviving various natural disasters common in Nigeria.',
+                    videoId: 'FubZWxLnfd8',
+                    type: 'youtube'
+                },
+                {
+                    id: 'v8',
+                    title: 'Home Emergency Evacuation Plan',
+                    category: 'Preparedness',
+                    description: 'Creating and practicing an effective evacuation plan for your home and family.',
+                    videoId: 'MNvGqxAIGFo',
+                    type: 'youtube'
+                },
+                {
+                    id: 'v9',
+                    title: 'Traffic Management and Safety',
+                    category: 'Accident',
+                    description: 'Understanding FRSC roles and tips for safe driving on Nigerian roads.',
+                    videoId: 'IisqrLOnqX8',
+                    type: 'youtube'
+                },
+                {
+                    id: 'v10',
+                    title: 'Community First Responders',
+                    category: 'Preparedness',
+                    description: 'Training and role of community members in initial emergency response.',
+                    videoId: 'V4x1BhsrZeY',
+                    type: 'youtube'
+                }
+            ];
+
+            let activeCategory = 'All'; // Keeps track of the currently active filter category
+            let searchTimeout; // For debouncing the search input
+
+            // --- Helper Functions ---
+
+            // Debounce function to limit how often a function is called
+            function debounce(func, delay) {
+                return function(...args) {
+                    const context = this;
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => func.apply(context, args), delay);
+                };
+            }
+
+            // Function to highlight search terms
+            function highlightSearchTerm(text, searchTerm) {
+                if (!searchTerm) {
+                    return text;
+                }
+                const regex = new RegExp(`(${searchTerm})`, 'gi');
+                return text.replace(regex, '<span class="highlight">$1</span>');
+            }
+
+            // Function to generate video cards
+            function createVideoCard(video, searchTerm = '') {
+                const videoCard = document.createElement('div');
+                videoCard.classList.add('video-card');
+
+                let videoEmbedHtml = '';
+                if (video.type === 'youtube') {
+                    videoEmbedHtml = `
+                        <div class="video-embed-container">
+                            <iframe
+                                src="https://www.youtube.com/embed/${video.videoId}?autoplay=0&rel=0&modestbranding=1"
+                                title="YouTube video player"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen
+                            ></iframe>
+                        </div>
+                    `;
+                }
+
+                // Apply highlighting to title and description
+                const highlightedTitle = highlightSearchTerm(video.title, searchTerm);
+                const highlightedDescription = highlightSearchTerm(video.description, searchTerm);
+
+                videoCard.innerHTML = `
+                    ${videoEmbedHtml}
+                    <div class="video-info">
+                        <h3 class="video-title">${highlightedTitle}</h3>
+                        <p class="video-category">Category: ${video.category}</p>
+                        <p class="video-description">${highlightedDescription}</p>
+                    </div>
+                `;
+                return videoCard;
+            }
+
+            // Function to render videos based on filters
+            window.filterVideos = (category = activeCategory) => {
+                const searchTerm = searchInput.value.toLowerCase();
+
+                // Update active category button
+                const buttons = categoryFiltersContainer.querySelectorAll('.filter-button');
+                buttons.forEach(button => {
+                    if (button.dataset.category === category) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
+                activeCategory = category; // Update global active category
+
+                // Filter videos
+                const filteredVideos = videoData.filter(video => {
+                    const matchesCategory = (activeCategory === 'All' || video.category === activeCategory);
+                    const matchesSearch = (
+                        video.title.toLowerCase().includes(searchTerm) ||
+                        video.description.toLowerCase().includes(searchTerm)
+                    );
+                    return matchesCategory && matchesSearch;
+                });
+
+                // Clear current videos
+                videoGrid.innerHTML = '';
+
+                // Display filtered videos or no results message
+                if (filteredVideos.length > 0) {
+                    filteredVideos.forEach(video => {
+                        videoGrid.appendChild(createVideoCard(video, searchTerm)); // Pass searchTerm for highlighting
+                    });
+                    noResultsMessage.classList.add('hidden');
+                } else {
+                    noResultsMessage.classList.remove('hidden');
+                }
+            };
+
+            // Debounced version of filterVideos
+            // Make debouncedFilterVideos globally accessible
+            window.debouncedFilterVideos = debounce(window.filterVideos, 300); // 300ms delay
+
+            // Function to populate category filter buttons
+            function populateCategoryFilters() {
+                const categories = new Set(videoData.map(video => video.category));
+                categories.forEach(category => {
+                    const button = document.createElement('button');
+                    button.classList.add('filter-button');
+                    button.setAttribute('data-category', category);
+                    button.textContent = category;
+                    button.onclick = () => window.filterVideos(category); // Call through window object
+                    categoryFiltersContainer.appendChild(button);
+                });
+            }
+
+            // --- Event Listeners ---
+
+            // Mobile Navigation Toggle
+            if (menuButton && mobileNav) {
+                menuButton.addEventListener('click', () => {
+                    mobileNav.classList.add('open');
+                    menuButton.setAttribute('aria-expanded', 'true');
+                });
+            }
+
+            if (closeNavButton && mobileNav) {
+                closeNavButton.addEventListener('click', () => {
+                    mobileNav.classList.remove('open');
+                    menuButton.setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            // Initial setup
+            populateCategoryFilters(); // Create category buttons
+            window.filterVideos(); // Initially display all videos (call through window object)
+        });
+    </script>
+</body>
+</html>
