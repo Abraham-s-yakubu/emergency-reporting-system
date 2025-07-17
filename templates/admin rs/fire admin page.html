@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Users Management</title>
+    
+    <!-- Tailwind CSS CDN for utility-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter for consistent typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons (e.g., plus, edit, trash) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* Base styles for the body, setting font, background, and text color */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #220000; /* Deep, dark red background */
+            color: #e2e8f0; /* Light text */
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        /* Keyframe for modal animation - for smooth appearance */
+        @keyframes fadeInScale { 
+            from { opacity: 0; transform: scale(0.95); } 
+            to { opacity: 1; transform: scale(1); } 
+        }
+
+        /* Keyframe for message animation - for smooth slide-in effect */
+        @keyframes fadeAndSlideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Reusable Dashboard Card Style - for main content sections */
+        .dashboard-card {
+            padding: 1.5rem; 
+            display: flex;
+            flex-direction: column;
+            background-color: #330000; /* Slightly lighter red than body for contrast */
+            border-radius: 1rem; /* More rounded corners for softness */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Clearer shadow */
+            border: 1px solid #440000; /* Subtle red border */
+        }
+
+        /* Unified styling for select and input fields */
+        .dashboard-select, .dashboard-input {
+            background-color: #440000; /* Darker red for input fields */
+            border: 1px solid #660000; /* Red border */
+            border-radius: 0.75rem; /* More rounded */
+            color: #F1F5F9; /* Light text color */
+            padding: 0.6rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease-in-out; /* Smooth transitions for focus states */
+        }
+        .dashboard-select:focus, .dashboard-input:focus {
+            outline: none;
+            border-color: #EF4444; /* Vibrant red on focus */
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3); /* Soft red glow on focus */
+        }
+        /* Custom arrow for select elements (replaces default browser arrow) */
+        .dashboard-select {
+            appearance: none; /* Remove default select arrow */
+            -webkit-appearance: none; /* For Safari */
+            -moz-appearance: none; /* For Firefox */
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23e2e8f0" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.25em;
+            padding-right: 2.5rem; /* Make space for the custom arrow */
+        }
+
+        /* Reusable Modal Styles - for pop-up dialogs */
+        .modal-overlay {
+            position: fixed;
+            inset: 0; /* Top, right, bottom, left set to 0 to cover full viewport */
+            background-color: rgba(0, 0, 0, 0.8); /* Darker, semi-transparent black overlay */
+            backdrop-filter: blur(4px); /* Subtle blur effect on background content */
+            z-index: 100; /* Ensure it's above most content */
+            display: flex;
+            align-items: center; /* Center content vertically */
+            justify-content: center; /* Center content horizontally */
+        }
+        .modal-container {
+            background-color: #330000; /* Dark red for modal content background */
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); /* Stronger shadow for depth */
+            border: 1px solid #440000; /* Red border */
+            width: 90%; /* Responsive width */
+            max-width: 50rem; /* Maximum width for larger screens */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Ensures content respects rounded corners */
+            animation: fadeInScale 0.25s ease-out forwards; /* Apply entrance animation */
+        }
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #440000; /* Red border at bottom of header */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 {
+            font-size: 1.875rem; /* Larger title font size */
+            font-weight: 700;
+            color: #F8FAFC; /* White text for modal title */
+        }
+        .modal-body {
+            padding: 1.5rem 2rem; /* Increased padding within the modal body */
+            overflow-y: auto; /* Enable vertical scrolling if content overflows */
+            flex-grow: 1; /* Allows body to take available space */
+        }
+        .dropdown-close-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #e2e8f0; /* Light color for close icon */
+            transition: color 0.2s;
+            font-size: 1.5rem;
+        }
+        .dropdown-close-button:hover {
+            color: #EF4444; /* Vibrant red on hover */
+        }
+        .hidden { display: none; } /* Utility class to hide elements */
+
+        /* Form Grouping - for consistent spacing and labeling */
+        .form-group {
+            margin-bottom: 1.25rem; /* Increased margin for better spacing */
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: #e2e8f0; /* Light text for labels */
+        }
+        .form-action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end; /* Align buttons to the right */
+            margin-top: 1.5rem;
+        }
+        /* Refined Button Styles - for primary and secondary actions */
+        .submit-btn, .cancel-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem; /* More rounded */
+            font-weight: 600;
+            transition: all 0.2s ease-in-out; /* Smoother transitions */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Subtle shadow */
+            border: none; /* Remove default border */
+            cursor: pointer;
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #DC2626, #B91C1C); /* Red gradient */
+            color: white;
+        }
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #B91C1C, #991B1B); /* Darker red gradient on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Stronger shadow on hover */
+        }
+        .cancel-btn {
+            background: linear-gradient(135deg, #440000, #330000); /* Dark red/grey gradient */
+            color: white;
+        }
+        .cancel-btn:hover {
+            background: linear-gradient(135deg, #330000, #220000); /* Even darker red/grey on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Table Specific Styles */
+        .admin-users-table { width: 100%; border-collapse: separate; border-spacing: 0 0.75rem; }
+        .admin-users-table th { text-align: left; padding: 0.5rem 1rem; font-size: 0.75rem; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .admin-users-table td { padding: 1rem; color: #F1F5F9; font-size: 0.875rem; }
+        .admin-users-table tbody tr { background-color: #440000; border-radius: 1rem; transition: all 0.2s; } /* Red background for rows */
+        .admin-users-table tbody tr:hover { background-color: #660000; transform: translateY(-2px); } /* Lighter red on hover */
+        .admin-users-table td:first-child { border-radius: 1rem 0 0 1rem; }
+        .admin-users-table td:last-child { border-radius: 0 1rem 1rem 0; }
+        
+        /* Status Badges (retained for potential future use, not directly used for users in this context) */
+        .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 500; font-size: 0.75rem; display: inline-block; }
+        .status-active { background-color: rgba(52, 211, 153, 0.2); color: #34D399; } /* Green for Active */
+        .status-inactive { background-color: rgba(239, 68, 68, 0.2); color: #EF4444; } /* Red for Inactive */
+        .status-pending { background-color: rgba(251, 191, 36, 0.2); color: #FBBF24; } /* Yellow for Pending */
+
+        /* Confirmation Modal Styles */
+        .confirmation-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.8); /* Darker overlay for better contrast */
+            backdrop-filter: blur(4px); /* Consistent blur */
+            z-index: 200; /* Higher than other modals */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .confirmation-modal-content {
+            background-color: #330000; /* Dark red for confirmation modal content */
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid #440000; /* Red border */
+            animation: fadeInScale 0.25s ease-out forwards; /* Apply animation here */
+        }
+        .confirmation-modal-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #F8FAFC; /* White text */
+            margin-bottom: 1rem;
+        }
+        .confirmation-modal-content p {
+            color: #e2e8f0; /* Light text */
+            margin-bottom: 1.5rem;
+        }
+        .confirmation-modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        /* New base style for modal action buttons to ensure consistent padding/font etc. */
+        .modal-action-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border: none;
+            cursor: pointer;
+            display: inline-flex; /* To accommodate icon if needed in future */
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .confirmation-modal-actions .confirm-btn {
+            background-color: #DC2626; /* Solid Red for Confirm */
+            color: white;
+        }
+        .confirmation-modal-actions .confirm-btn:hover {
+            background-color: #B91C1C; /* Darker red on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        .confirmation-modal-actions .cancel-btn {
+            background-color: #660000; /* Solid Dark Red for Cancel */
+            color: white;
+        }
+        .confirmation-modal-actions .cancel-btn:hover {
+            background-color: #440000; /* Even Darker red on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Improved Edit/Delete Button Styles for table actions */
+        .action-button {
+            padding: 0.5rem 1rem; /* Slightly smaller for table rows */
+            border-radius: 0.5rem; /* Rounded corners */
+            font-weight: 500; /* Medium weight */
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem; /* Space between icon and text */
+        }
+
+        .action-button.edit-btn {
+            background: linear-gradient(135deg, #660000, #440000); /* Greyish-red gradient for edit */
+            color: #e2e8f0;
+        }
+        .action-button.edit-btn:hover {
+            background: linear-gradient(135deg, #440000, #220000); /* Darker greyish-red */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            color: #F8FAFC;
+        }
+
+        .action-button.delete-btn {
+            background-color: #EF4444; /* Solid Red for Delete */
+            color: white;
+        }
+        .action-button.delete-btn:hover {
+            background-color: #DC2626; /* Darker red on hover */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        /* Message Box Styles - for success/error notifications */
+        .message-box {
+            background-color: #440000; /* Dark red */
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            color: #e2e8f0;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+            animation: fadeAndSlideIn 0.3s ease-out forwards;
+            position: relative; /* For z-index to appear above table */
+            z-index: 10; 
+        }
+        .message-box.success {
+            background-color: #22C55E; /* Green for general success */
+            color: white;
+        }
+        .message-box.error {
+            background-color: #EF4444; /* Red for errors and delete-related messages */
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="max-w-7xl mx-auto py-8">
+        <!-- Header and Back to Dashboard Link -->
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-extrabold text-red-400">Admin Users Management</h1>
+            <!-- Django Integration: This link might point to a dashboard URL defined in Django's urls.py -->
+            <a href="#" class="text-red-400 hover:text-red-300 text-sm flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Main Dashboard Card for User Management -->
+        <div class="dashboard-card mb-6">
+            <!-- Search and Filter Controls -->
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+                <div class="flex-grow w-full md:w-auto flex flex-col sm:flex-row gap-4 lg:gap-6">
+                    <div class="flex-grow">
+                        <label for="userSearch" class="sr-only">Search Users</label>
+                        <input type="text" id="userSearch" placeholder="Search by name or email..." class="dashboard-input w-full">
+                    </div>
+                    <div>
+                        <label for="roleFilter" class="sr-only">Filter by Role</label>
+                        <select id="roleFilter" class="dashboard-select w-full sm:w-40">
+                            <option value="all">All Roles</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Editor">Editor</option>
+                            <option value="Viewer">Viewer</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Button to add a new user -->
+                <button id="addUserButton" class="submit-btn flex-shrink-0 w-full md:w-auto"><i class="fas fa-plus-circle mr-2"></i> Add New User</button>
+            </div>
+
+            <!-- Message box for success/error messages -->
+            <div id="actionMessage" class="message-box hidden"></div>
+
+            <!-- Users Table -->
+            <div class="overflow-x-auto">
+                <table class="admin-users-table">
+                    <thead>
+                        <tr>
+                            <th class="w-1/4">Name</th>
+                            <th class="w-1/3">Email</th>
+                            <th class="w-1/6">Role</th>
+                            <th class="w-1/5">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <!-- Django Integration: In a Django template, you would typically loop through users passed from the view context -->
+                        {% comment %}
+                        Example of Django template loop for users:
+                        {% for user in users %}
+                        <tr data-user-id="{{ user.id }}">
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.role }}</td>
+                            <td class="whitespace-nowrap">
+                                <button class="action-button edit-btn mr-2" data-user-id="{{ user.id }}"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="action-button delete-btn" data-user-id="{{ user.id }}"><i class="fas fa-trash-alt"></i> Delete</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endcomment %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Message displayed when no users match the filter criteria -->
+            <div id="noUsersMessage" class="text-center py-4 text-red-200 hidden">No users found matching your criteria.</div>
+        </div>
+    </div>
+
+    <!-- User Add/Edit Modal -->
+    <div id="userModal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New User</h2>
+                <button id="closeUserModal" class="dropdown-close-button"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <!-- Django Integration: Include Django's CSRF token for security in POST/PUT requests -->
+                    {% csrf_token %}
+                    <input type="hidden" id="userId"> <!-- Hidden input to store user ID for edits -->
+                    <div class="form-group">
+                        <label for="userName">Name</label>
+                        <input type="text" id="userName" placeholder="John Doe" required class="dashboard-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email</label>
+                        <input type="email" id="userEmail" placeholder="john.doe@example.com" required class="dashboard-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">Password</label>
+                        <input type="password" id="userPassword" placeholder="********" class="dashboard-input">
+                        <p id="passwordHint" class="text-red-300 text-xs mt-1 hidden">Leave blank to keep current password.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Role</label>
+                        <select id="userRole" class="dashboard-select" required>
+                            <option value="">Select Role</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Editor">Editor</option>
+                            <option value="Viewer">Viewer</option>
+                        </select>
+                    </div>
+                    <div class="form-action-buttons">
+                        <button type="button" id="cancelUserForm" class="cancel-btn"><i class="fas fa-times-circle mr-2"></i> Cancel</button>
+                        <button type="submit" id="saveUserButton" class="submit-btn"><i class="fas fa-save mr-2"></i> Save User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal (for delete actions) -->
+    <div id="confirmationModal" class="confirmation-modal-overlay hidden">
+        <div class="confirmation-modal-content">
+            <h3 id="confirmationModalTitle">Confirm Action</h3>
+            <p id="confirmationModalMessage">Are you sure you want to proceed?</p>
+            <div class="confirmation-modal-actions">
+                <button id="confirmActionButton" class="modal-action-button confirm-btn">Confirm</button>
+                <button id="cancelActionButton" class="modal-action-button cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        (function() {
+            // Simulated User Data: In a real Django application, this data would be fetched from a backend API.
+            // Example: Make an AJAX call to a Django REST Framework endpoint like `/api/users/`.
+            // const users = []; // Initialize empty, then populate from fetch
+            const users = [
+                { id: 'usr-001', name: 'Abraham Syakubu', email: 'abrahams.syakubu@gmail.com', role: 'Admin' },
+                { id: 'usr-002', name: 'Bob Johnson', email: 'bob.j@example.com', role: 'Editor' },
+                { id: 'usr-003', name: 'Charlie Brown', email: 'charlie.b@example.com', role: 'Viewer' },
+            ];
+
+            // Cache DOM elements for efficient access.
+            const els = {
+                userTableBody: document.getElementById('userTableBody'),
+                noUsersMessage: document.getElementById('noUsersMessage'),
+                userSearch: document.getElementById('userSearch'),
+                roleFilter: document.getElementById('roleFilter'),
+                addUserButton: document.getElementById('addUserButton'),
+                userModal: document.getElementById('userModal'),
+                closeUserModal: document.getElementById('closeUserModal'),
+                modalTitle: document.getElementById('modalTitle'),
+                userForm: document.getElementById('userForm'),
+                userId: document.getElementById('userId'),
+                userName: document.getElementById('userName'),
+                userEmail: document.getElementById('userEmail'),
+                userPassword: document.getElementById('userPassword'),
+                passwordHint: document.getElementById('passwordHint'),
+                userRole: document.getElementById('userRole'),
+                cancelUserForm: document.getElementById('cancelUserForm'),
+                saveUserButton: document.getElementById('saveUserButton'),
+                confirmationModal: document.getElementById('confirmationModal'),
+                confirmationModalTitle: document.getElementById('confirmationModalTitle'),
+                confirmationModalMessage: document.getElementById('confirmationModalMessage'),
+                confirmActionButton: document.getElementById('confirmActionButton'),
+                cancelActionButton: document.getElementById('cancelActionButton'),
+                actionMessage: document.getElementById('actionMessage'), // Element to display success/error messages
+            };
+
+            let editingUserId = null; // Variable to keep track of the ID of the user currently being edited.
+
+            // --- Utility Functions ---
+
+            /**
+             * Shows a given modal element by removing the 'hidden' class.
+             * @param {HTMLElement} modalElement - The modal DOM element to show.
+             */
+            function showModal(modalElement) {
+                if (modalElement) modalElement.classList.remove('hidden');
+            }
+
+            /**
+             * Hides a given modal element by adding the 'hidden' class.
+             * @param {HTMLElement} modalElement - The modal DOM element to hide.
+             */
+            function hideModal(modalElement) {
+                if (modalElement) modalElement.classList.add('hidden');
+            }
+
+            /**
+             * Displays a temporary message (success or error) to the user.
+             * @param {string} message - The text message to display.
+             * @param {string} type - The type of message ('success' or 'error'). Used for styling.
+             * @param {number} duration - How long the message should be displayed in milliseconds. Defaults to 3000ms.
+             */
+            function showMessage(message, type, duration = 3000) {
+                if (!els.actionMessage) return; // Exit if message element is not found
+
+                // Hide the message box first to ensure the animation re-triggers if a new message comes quickly.
+                els.actionMessage.classList.add('hidden'); 
+                // A small delay ensures the browser registers the 'hidden' state before removing it.
+                setTimeout(() => {
+                    els.actionMessage.textContent = message; // Set message text
+                    els.actionMessage.classList.remove('success', 'error'); // Remove previous type classes
+                    els.actionMessage.classList.add(type); // Add the new type class
+                    els.actionMessage.classList.remove('hidden'); // Make the message box visible
+
+                    // Set a timeout to hide the message after the specified duration.
+                    setTimeout(() => {
+                        els.actionMessage.classList.add('hidden');
+                    }, duration);
+                }, 50); 
+            }
+
+            // --- User Table Rendering ---
+
+            /**
+             * Renders the list of users in the table, applying search and role filters.
+             * It clears the existing table rows and inserts new ones based on the filtered data.
+             */
+            function renderUsers() {
+                // Ensure all necessary DOM elements are available before proceeding.
+                if (!els.userTableBody || !els.noUsersMessage || !els.userSearch || !els.roleFilter) return;
+
+                const searchTerm = els.userSearch.value.toLowerCase(); // Get search term and convert to lowercase for case-insensitive search.
+                const selectedRole = els.roleFilter.value; // Get selected role filter.
+
+                // Filter the `users` array based on search term and selected role.
+                const filteredUsers = users.filter(user => {
+                    const matchesSearch = user.name.toLowerCase().includes(searchTerm) || user.email.toLowerCase().includes(searchTerm);
+                    const matchesRole = selectedRole === 'all' || user.role === selectedRole; // 'all' means no role filter.
+                    return matchesSearch && matchesRole; 
+                });
+
+                els.userTableBody.innerHTML = ''; // Clear all existing rows from the table body.
+
+                // Display "No users found" message if the filtered list is empty.
+                if (filteredUsers.length === 0) {
+                    els.noUsersMessage.classList.remove('hidden');
+                    return;
+                } else {
+                    els.noUsersMessage.classList.add('hidden'); // Hide the message if users are found.
+                }
+
+                // Iterate over the filtered users and create a table row for each.
+                filteredUsers.forEach(user => {
+                    const row = `
+                        <tr data-user-id="${user.id}">
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.role}</td>
+                            <td class="whitespace-nowrap">
+                                <button class="action-button edit-btn mr-2" data-user-id="${user.id}"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="action-button delete-btn" data-user-id="${user.id}"><i class="fas fa-trash-alt"></i> Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    els.userTableBody.insertAdjacentHTML('beforeend', row); // Add the new row to the table.
+                });
+
+                // Attach event listeners to the dynamically created Edit and Delete buttons.
+                // This must be done after the rows are added to the DOM.
+                els.userTableBody.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent the global click listener from closing the modal immediately.
+                        editUser(e.currentTarget.dataset.userId); // Call editUser function with the user's ID.
+                    });
+                });
+
+                els.userTableBody.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent the global click listener from closing the modal immediately.
+                        confirmDeleteUser(e.currentTarget.dataset.userId); // Call confirmDeleteUser function.
+                    });
+                });
+            }
+
+            // --- User Form (Add/Edit) Management ---
+
+            /**
+             * Opens the user modal, either for adding a new user or editing an existing one.
+             * @param {boolean} isEdit - True if opening for editing, false for adding.
+             * @param {Object} [user={}] - The user object to pre-fill the form if in edit mode.
+             */
+            function openUserModal(isEdit = false, user = {}) {
+                // Ensure all necessary form elements are available.
+                if (!els.modalTitle || !els.userId || !els.userName || !els.userEmail || !els.userPassword || !els.passwordHint || !els.userRole) return;
+
+                els.userForm.reset(); // Clear any previous form data.
+                els.passwordHint.classList.add('hidden'); // Hide password hint by default.
+                els.userPassword.required = true; // Password is required when adding a new user.
+
+                if (isEdit) {
+                    els.modalTitle.textContent = 'Edit User'; // Set modal title for editing.
+                    els.userId.value = user.id; // Populate hidden user ID.
+                    els.userName.value = user.name; // Pre-fill name.
+                    els.userEmail.value = user.email; // Pre-fill email.
+                    els.userRole.value = user.role; // Pre-fill role.
+                    els.passwordHint.classList.remove('hidden'); // Show hint for password in edit mode.
+                    els.userPassword.removeAttribute('required'); // Password is not required for editing (can leave blank).
+                    editingUserId = user.id; // Store the ID of the user being edited.
+                } else {
+                    els.modalTitle.textContent = 'Add New User'; // Set modal title for adding.
+                    els.userId.value = ''; // Clear hidden user ID.
+                    editingUserId = null; // No user is being edited.
+                }
+                showModal(els.userModal); // Display the user modal.
+            }
+
+            /**
+             * Closes the user add/edit modal and resets its state.
+             */
+            function closeUserModal() {
+                hideModal(els.userModal); // Hide the modal.
+                els.userForm.reset(); // Reset the form fields.
+                editingUserId = null; // Clear the editing user ID.
+            }
+
+            /**
+             * Handles the submission of the user form (for both adding and editing users).
+             * @param {Event} event - The form submission event.
+             */
+            function handleUserSubmit(event) {
+                event.preventDefault(); // Prevent the default form submission behavior (page reload).
+                // Ensure all necessary form elements are available.
+                if (!els.userId || !els.userName || !els.userEmail || !els.userPassword || !els.userRole) return;
+
+                // Django Integration: Get the CSRF token from a hidden input or a cookie.
+                // You would typically include a Django template tag like <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                const csrftoken = getCookie('csrftoken'); 
+
+                // Generate a new unique ID for new users, otherwise use existing ID for edits.
+                const id = els.userId.value || `usr-${crypto.randomUUID().substring(0, 8)}`; 
+                const name = els.userName.value.trim();
+                const email = els.userEmail.value.trim();
+                const role = els.userRole.value;
+                const password = els.userPassword.value; // In a real Django app, this would be hashed on the backend.
+
+                // Data to send to Django backend
+                const userData = {
+                    id: id, // Django might ignore this for new users if using auto-incrementing PK
+                    name: name,
+                    email: email,
+                    role: role,
+                    password: password // Send plain password, Django hashes it
+                };
+
+                // Determine the API endpoint and HTTP method based on whether it's an edit or add operation.
+                let apiEndpoint = '/api/users/'; // Example Django REST Framework endpoint for users
+                let httpMethod = 'POST';
+
+                if (editingUserId) {
+                    apiEndpoint = `/api/users/${editingUserId}/`; // Specific user endpoint for update (e.g., /api/users/usr-001/)
+                    httpMethod = 'PUT'; // Or 'PATCH' for partial updates
+                }
+
+                // Django Integration: Example of a fetch request to a Django backend:
+                fetch(apiEndpoint, {
+                    method: httpMethod,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken // Important for Django POST/PUT/DELETE requests
+                    },
+                    body: JSON.stringify(userData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // If the response is not OK, try to parse error details from JSON
+                        return response.json().then(errorData => { 
+                            throw new Error(errorData.detail || 'Failed to save user. Please check your input.'); 
+                        });
+                    }
+                    // For successful responses, parse the JSON data (e.g., the saved/updated user object)
+                    return response.json();
+                })
+                .then(data => {
+                    // Assuming Django returns the saved/updated user object
+                    if (editingUserId) {
+                        const userIndex = users.findIndex(u => u.id === editingUserId);
+                        if (userIndex !== -1) {
+                            users[userIndex] = data; // Update local data with response from Django
+                            showMessage(`User "${name}" updated successfully!`, 'success');
+                        }
+                    } else {
+                        users.push(data); // Add new user returned from Django
+                        showMessage(`User "${name}" added successfully!`, 'success');
+                    }
+                    renderUsers(); // Re-render the table to show updated data
+                    closeUserModal(); // Close the modal
+                })
+                .catch(error => {
+                    console.error('Error saving user:', error);
+                    showMessage(`Error: ${error.message || 'Failed to save user.'}`, 'error');
+                });
+                
+                // --- REMOVE THE FOLLOWING FALLBACK BLOCK IN A REAL DJANGO INTEGRATION ---
+                /*
+                if (editingUserId) {
+                    const userIndex = users.findIndex(u => u.id === editingUserId);
+                    if (userIndex !== -1) {
+                        users[userIndex].name = name;
+                        users[userIndex].email = email;
+                        users[userIndex].role = role;
+                        if (password) { 
+                            // In a real application, hash and save password
+                        }
+                        showMessage(`User "${name}" updated successfully!`, 'success');
+                    } else {
+                        showMessage(`Error: User "${name}" not found for update.`, 'error');
+                    }
+                } else {
+                    users.push({ id, name, email, role });
+                    showMessage(`User "${name}" added successfully!`, 'success');
+                }
+                renderUsers();
+                closeUserModal();
+                */
+                // --- END FALLBACK BLOCK ---
+            }
+
+            /**
+             * Initiates the edit process for a specific user.
+             * @param {string} userId - The ID of the user to edit.
+             */
+            function editUser(userId) {
+                const user = users.find(u => u.id === userId); // Find the user object by ID.
+                if (user) {
+                    openUserModal(true, user); // Open the modal in edit mode with user data.
+                }
+            }
+
+            // --- Delete Confirmation ---
+
+            /**
+             * Displays a confirmation modal before deleting a user.
+             * @param {string} userId - The ID of the user to be deleted.
+             */
+            function confirmDeleteUser(userId) {
+                const userToDelete = users.find(u => u.id === userId);
+                if (!userToDelete) return; // Exit if user not found.
+
+                // Ensure confirmation modal elements are available.
+                if (!els.confirmationModalTitle || !els.confirmationModalMessage || !els.confirmActionButton || !els.cancelActionButton) return;
+
+                els.confirmationModalTitle.textContent = 'Delete User'; // Set modal title.
+                els.confirmationModalMessage.innerHTML = `Are you sure you want to delete user: <span class="font-bold text-white">"${userToDelete.name}" (${userToDelete.email})</span>? This action cannot be undone.`;
+                showModal(els.confirmationModal); // Show the confirmation modal.
+
+                // Clone and replace buttons to remove old event listeners and attach new ones specific to this action.
+                // This is a common pattern to prevent multiple event listeners from accumulating on the same button.
+                const newConfirmBtn = els.confirmActionButton.cloneNode(true);
+                const newCancelBtn = els.cancelActionButton.cloneNode(true);
+                els.confirmActionButton.replaceWith(newConfirmBtn);
+                els.cancelActionButton.replaceWith(newCancelBtn);
+                els.confirmActionButton = newConfirmBtn;
+                els.cancelActionButton = newCancelBtn;
+
+                // Attach event listeners for confirm and cancel actions.
+                els.confirmActionButton.onclick = () => {
+                    deleteUser(userId); // Call deleteUser if confirmed.
+                    hideModal(els.confirmationModal); // Hide confirmation modal.
+                };
+                els.cancelActionButton.onclick = () => {
+                    showMessage('User deletion cancelled.', 'error'); // Show cancellation message.
+                    hideModal(els.confirmationModal); // Hide confirmation modal.
+                };
+            }
+
+            /**
+             * Deletes a user from the `users` array.
+             * @param {string} userId - The ID of the user to delete.
+             */
+            function deleteUser(userId) {
+                // Django Integration: Get the CSRF token.
+                const csrftoken = getCookie('csrftoken');
+
+                // Django Integration: Example of a fetch request to a Django backend for deletion:
+                fetch(`/api/users/${userId}/`, { // Example endpoint for deleting a specific user
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': csrftoken // Important for Django DELETE requests
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // If deletion fails, try to get error details
+                        return response.json().then(errorData => { throw new Error(errorData.detail || 'Failed to delete user.'); });
+                    }
+                    // If deletion is successful (Django typically returns 204 No Content for successful DELETE)
+                    const userIndex = users.findIndex(u => u.id === userId);
+                    if (userIndex !== -1) {
+                        const deletedUser = users.splice(userIndex, 1); // Remove user from local array.
+                        showMessage(`User "${deletedUser[0].name}" deleted successfully!`, 'error'); 
+                        renderUsers(); // Re-render the table.
+                    } else {
+                        showMessage('Error: User not found for deletion locally.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting user:', error);
+                    showMessage(`Error: ${error.message || 'Failed to delete user.'}`, 'error');
+                });
+
+                // --- REMOVE THE FOLLOWING FALLBACK BLOCK IN A REAL DJANGO INTEGRATION ---
+                /*
+                const userIndex = users.findIndex(u => u.id === userId);
+                if (userIndex !== -1) {
+                    const deletedUser = users.splice(userIndex, 1); // Remove user from array.
+                    showMessage(`User "${deletedUser[0].name}" deleted successfully!`, 'error'); // Show success message.
+                    renderUsers(); // Re-render the table.
+                } else {
+                    showMessage('Error: User not found for deletion.', 'error');
+                }
+                */
+                // --- END FALLBACK BLOCK ---
+            }
+
+            // Django Integration: Helper function to get CSRF token from cookies (Django's default CSRF protection)
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            // --- Event Listeners Initialization ---
+
+            /**
+             * Initializes all event listeners for user interactions on the page.
+             */
+            function initEventListeners() {
+                // Event listener for user search input.
+                if (els.userSearch) els.userSearch.addEventListener('input', renderUsers);
+                // Event listener for role filter dropdown.
+                if (els.roleFilter) els.roleFilter.addEventListener('change', renderUsers);
+                // Event listener for "Add New User" button.
+                if (els.addUserButton) els.addUserButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent event bubbling to the global click listener.
+                    openUserModal(false); // Open modal in add mode.
+                });
+                // Event listener for closing the user modal (X button).
+                if (els.closeUserModal) els.closeUserModal.addEventListener('click', closeUserModal);
+                // Event listener for "Cancel" button in user form.
+                if (els.cancelUserForm) els.cancelUserForm.addEventListener('click', () => {
+                    closeUserModal();
+                    showMessage('User addition/edit cancelled.', 'error'); 
+                });
+                // Event listener for submitting the user form.
+                if (els.userForm) els.userForm.addEventListener('submit', handleUserSubmit);
+
+                // Global click listener to close modals when clicking outside them.
+                document.addEventListener('click', (event) => {
+                    // Check if the click originated from a button that opens a modal.
+                    const clickedModalTrigger = event.target.closest('.action-button') || event.target.closest('#addUserButton');
+                    
+                    // If user modal is open, and the click is outside it and not on a trigger button, hide it.
+                    if (els.userModal && !els.userModal.classList.contains('hidden') && !els.userModal.contains(event.target) && !clickedModalTrigger) {
+                        hideModal(els.userModal);
+                        showMessage('User addition/edit cancelled.', 'error'); 
+                    }
+                    // If confirmation modal is open, and the click is outside it and not on a trigger button, hide it.
+                    if (els.confirmationModal && !els.confirmationModal.classList.contains('hidden') && !els.confirmationModal.contains(event.target) && !clickedModalTrigger) {
+                        hideModal(els.confirmationModal);
+                        showMessage('Action cancelled.', 'error'); 
+                    }
+                });
+            }
+
+            // --- Initialization ---
+
+            // Execute functions when the DOM is fully loaded.
+            document.addEventListener('DOMContentLoaded', () => {
+                initEventListeners(); // Initialize all event listeners.
+                renderUsers(); // Render the initial list of users in the table.
+
+                // Django Integration: Fetch initial user data from your Django API on page load.
+                /*
+                fetch('/api/users/') // Replace with your actual Django API endpoint for listing users
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Assuming data is an array of user objects
+                        users.splice(0, users.length, ...data); // Replace local data with fetched data
+                        renderUsers(); // Re-render the table with fetched data
+                    })
+                    .catch(error => console.error('Error fetching users:', error));
+                */
+            });
+
+        })(); // Immediately Invoked Function Expression (IIFE) to encapsulate code.
+    </script>
+</body>
+</html>

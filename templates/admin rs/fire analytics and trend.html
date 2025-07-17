@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Analytics & Trends Dashboard - Adamawa State</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <!-- Chart.js Data Labels Plugin for displaying values on bars/pies -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <style>
+        /* Base styles for the entire page */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1A0A0A; /* Darker red-brown background for fire theme */
+            color: #FFECEC; /* Light red-pink text color */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2d1414; /* Darker red for scrollbar track */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a2727; /* Red-brown for scrollbar thumb */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7b3f3f; /* Lighter red-brown on hover */
+        }
+
+        .dashboard-container {
+            flex-grow: 1;
+            display: flex;
+            padding: 1.5rem; /* Consistent padding */
+            gap: 1.5rem; /* Spacing between main sections */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            justify-content: center; /* Center content horizontally */
+        }
+
+        /* Main content area for charts and tables */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Spacing between charts/tables */
+            min-width: 0; /* Allow content to shrink */
+            max-width: 1400px; /* Increased max-width for wider charts/layout */
+            width: 100%; /* Ensure it takes full available width */
+        }
+
+        /* Card styles for charts and tables */
+        .card {
+            background-color: #2D1414; /* Darker red for cards */
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            color: #FFECEC;
+            display: flex; /* Use flexbox to align content within the card */
+            flex-direction: column; /* Stack content vertically */
+            justify-content: space-between; /* Distribute space */
+        }
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #FFFFFF;
+        }
+
+        /* Chart Wrapper to control canvas height */
+        .chart-wrapper {
+            position: relative;
+            height: 280px; /* Adjusted fixed height for most charts for better spacing */
+            width: 100%; /* Ensure it takes full width of parent */
+        }
+        /* Specific height for the larger monthly trends chart */
+        .chart-wrapper.large-chart {
+            height: 350px; /* Slightly increased height for larger charts */
+        }
+
+        /* Table styles (though not present in this version, keeping for consistency) */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.75rem; /* Spacing between rows */
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #220F0F; /* Even darker red for table header */
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: #D4A0A0; /* Lighter red-brown */
+            border-radius: 0.75rem; /* Rounded corners for header cells */
+        }
+        .data-table td {
+            background-color: #4A2727; /* Darker red-brown for table cells */
+            padding: 0.75rem 1rem;
+            color: #FFECEC;
+            border-radius: 0.75rem; /* Rounded corners for table cells */
+        }
+        .data-table tbody tr:hover td {
+            background-color: #7B3F3F; /* Lighter red-brown on hover */
+        }
+
+        /* Status badges */
+        .status-badge {
+            padding: 0.3em 0.6em;
+            border-radius: 0.5rem;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: white;
+            display: inline-block;
+        }
+        .status-reported { background-color: #FACC15; color: #334155; } /* Yellow */
+        .status-closed { background-color: #22C55E; } /* Green */
+        .status-active { background-color: #EF4444; } /* Red */
+
+        /* Severity text colors */
+        .severity-text {
+            font-weight: 600;
+        }
+        .severity-critical { color: #DC2626; } /* Darker Red */
+        .severity-serious { color: #F97316; } /* Orange */
+        .severity-minor { color: #FACC15; } /* Yellow */
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+                gap: 1rem;
+            }
+            .card {
+                padding: 1rem;
+                border-radius: 1rem;
+            }
+            .card-title {
+                font-size: 1.25rem;
+            }
+            .data-table th, .data-table td {
+                padding: 0.6rem 0.8rem;
+                border-radius: 0.6rem;
+            }
+            .chart-wrapper {
+                height: 220px; /* Slightly smaller height on mobile */
+            }
+            .chart-wrapper.large-chart {
+                height: 300px;
+            }
+        }
+
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        .modal-content {
+            background-color: #2d3748;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            color: #a0aec0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="dashboard-container">
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Title Section -->
+            <section class="text-center mb-6">
+                <h1 class="text-4xl font-extrabold text-white">Fire Analytics & Trends Dashboard</h1>
+                <p class="text-red-200 mt-2 text-lg">Comprehensive insights into fire incidents in Adamawa State</p>
+            </section>
+
+            <!-- Summary Statistics - 8 Cards -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="card text-center p-4">
+                    <p class="text-red-200 text-sm">Total Incidents</p>
+                    <p id="totalIncidents" class="text-3xl font-bold text-white mt-1">0</p>
+                </div>
+                <div class="card text-center p-4">
+                    <p class="text-red-200 text-sm">Active Incidents</p>
+                    <p id="activeIncidents" class="text-3xl font-bold text-red-500 mt-1">0</p>
+                </div>
+                <div class="card text-center p-4">
+                    <p class="text-red-200 text-sm">Fatalities</p>
+                    <p id="totalFatalities" class="text-3xl font-bold text-red-700 mt-1">0</p>
+                </div>
+                <div class="card text-center p-4">
+                    <p class="text-red-200 text-sm">Avg. Response Time (min)</p>
+                    <p id="avgResponseTime" class="text-3xl font-bold text-white mt-1">0</p>
+                </div>
+                <div class="card text-center p-4">
+                    <p class="text-red-200 text-sm">Avg. Damage Area (sq.m)</p>
+                    <p id="avgDamageArea" class="text-3xl font-bold text-white mt-1">0</p>
+                </div>
+                <div class="card text-center p-4">
+                    <p class="text-red-200 text-sm">Most Common Cause</p>
+                    <p id="mostCommonCause" class="text-3xl font-bold text-white mt-1">N/A</p>
+                </div>
+                <div class="card text-center p-4">
+                    <p class="text-red-200 text-sm">Reports by Day</p>
+                    <p id="reportsByDay" class="text-3xl font-bold text-white mt-1">N/A</p>
+                </div>
+                <div class="card text-center p-4">
+                    <p class="text-red-200 text-sm">Reports by Hour Block</p>
+                    <p id="reportsByHour" class="text-3xl font-bold text-white mt-1">N/A</p>
+                </div>
+            </section>
+
+            <!-- Charts Section - All Charts from Screenshot -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="card lg:col-span-2">
+                    <h3 class="card-title">Annual Report Trend</h3>
+                    <div class="chart-wrapper large-chart">
+                        <canvas id="annualReportTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">Fire Incidents by Month</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="monthlyTrendsChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Top 10 Fire Locations</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="topLocationsChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Fire Incidents by Day of Week</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="dayOfWeekChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Fire Incidents by Time of Day</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="timeOfDayChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Seasonal Trend</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="seasonalTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Average Response Time by Severity</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="responseTimeBySeverityChart"></canvas>
+                    </div>
+                </div>
+                <div class="card lg:col-span-2">
+                    <h3 class="card-title">Fire Causes by Property Type</h3>
+                    <div class="chart-wrapper large-chart">
+                        <canvas id="causesByPropertyTypeChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Response Time Distribution</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="responseTimeDistributionChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Incidents by Property Type</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="propertyTypeBreakdownChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Export Section -->
+            <section class="card">
+                <h3 class="card-title">Data Export</h3>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <button id="exportCsvBtn" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-md">Export All Data (CSV)</button>
+                    <button id="exportPngBtn" class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 shadow-md">Export Charts (PNG)</button>
+                    <button id="customReportBtn" class="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 shadow-md">Generate Custom Report</button>
+                </div>
+            </section>
+
+            <!-- Key Analytical Insights -->
+            <section class="card">
+                <h3 class="card-title">Key Analytical Insights for Adamawa State</h3>
+                <ul class="space-y-2 text-red-100 list-none pl-0">
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">&bull;</span>
+                        <span><strong class="text-white">Peak Incident Times:</strong> Most fire incidents in Adamawa occur between 18:00 and 20:00, especially in urban centers like Yola and Jimeta, likely due to increased cooking and electrical appliance usage.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">&bull;</span>
+                        <span><strong class="text-white">Leading Cause:</strong> Electrical faults remain the primary cause of fires across Adamawa, accounting for a significant portion of reported incidents, followed by cooking-related accidents.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">&bull;</span>
+                        <span><strong class="text-white">High-Risk Locations:</strong> Markets (e.g., Jimeta Modern Market) and densely populated residential areas show a higher frequency of critical and serious incidents.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">&bull;</span>
+                        <span><strong class="text-white">Response Time Efficiency:</strong> Average response time for critical incidents is 18 minutes, which is a target for improvement, particularly in remote LGAs.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">&bull;</span>
+                        <span><strong class="text-white">Seasonal Variation:</strong> The dry season (November-March) sees a significant spike in bush fires and general incidents, especially in agricultural areas.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">&bull;</span>
+                        <span><strong class="text-white">Property Type Impact:</strong> Residential properties account for the largest share of incidents, followed by commercial properties and market stalls.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">&bull;</span>
+                        <span><strong class="text-white">Casualty Trends:</strong> While total incidents are consistent, efforts to reduce fatalities and injuries are ongoing, showing some positive trends in early response.</span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Key Areas for Improvement & Strategic Recommendations -->
+            <section class="card">
+                <h3 class="card-title">Key Areas for Improvement & Strategic Recommendations for Adamawa State</h3>
+                <ol class="space-y-2 text-red-100 list-none pl-0">
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">1.</span>
+                        <span><strong class="text-white">Public Awareness Campaigns:</strong> Launch targeted campaigns on electrical safety, safe cooking practices, and bush fire prevention in local languages across all LGAs, especially before and during the dry season.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">2.</span>
+                        <span><strong class="text-white">Infrastructure Upgrade:</strong> Collaborate with Yola Electricity Distribution Company (YEDC) to inspect and upgrade aging electrical infrastructure in high-risk commercial and market areas, and residential zones with frequent electrical fires.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">3.</span>
+                        <span><strong class="text-white">Rapid Response Teams:</strong> Enhance the capacity of fire service stations in major towns (Yola, Mubi, Numan) and establish smaller rapid response units in strategic rural areas to improve response times.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">4.</span>
+                        <span><strong class="text-white">Seasonal Preparedness:</strong> Develop and enforce specific fire prevention measures for the dry season, including controlled burning guidelines for farmers and increased surveillance in bushland areas.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">5.</span>
+                        <span><strong class="text-white">Community Engagement:</strong> Organize regular fire safety drills and workshops in schools, markets, and residential communities across Adamawa to educate citizens on basic fire prevention and emergency procedures.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">6.</span>
+                        <span><strong class="text-white">Technology Integration:</strong> Explore the use of drone technology for early detection of bush fires and advanced analytics for predicting potential hotspots based on weather patterns and historical data.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-400 mr-2 text-lg leading-none">7.</span>
+                        <span><strong class="text-white">Inter-Agency Collaboration:</strong> Strengthen coordination between the Adamawa State Fire Service, NEMA, SEMA, and local security agencies for effective incident management and post-fire support.</span>
+                    </li>
+                </ol>
+            </section>
+        </main>
+    </div>
+
+    <!-- Custom Report Generation Modal -->
+    <div id="customReportModal" class="modal hidden">
+        <div class="modal-content w-full md:w-2/3 lg:w-1/2">
+            <button class="modal-close-button" onclick="document.getElementById('customReportModal').classList.add('hidden');">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 class="text-2xl font-bold text-white mb-4">Generate Custom Report</h2>
+            <form id="reportGenerationForm" class="space-y-4">
+                <div>
+                    <label for="reportStartDate" class="block text-gray-400 text-sm font-bold mb-2">Start Date:</label>
+                    <input type="date" id="reportStartDate" class="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 text-gray-200 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div>
+                    <label for="reportEndDate" class="block text-gray-400 text-sm font-bold mb-2">End Date:</label>
+                    <input type="date" id="reportEndDate" class="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 text-gray-200 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div>
+                    <label for="reportSeverityFilter" class="block text-gray-400 text-sm font-bold mb-2">Severity:</label>
+                    <select id="reportSeverityFilter" class="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 text-gray-200 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="all">All Severities</option>
+                        <option value="Critical">Critical</option>
+                        <option value="Serious">Serious</option>
+                        <option value="Minor">Minor</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="reportLocationFilter" class="block text-gray-400 text-sm font-bold mb-2">Location:</label>
+                    <select id="reportLocationFilter" class="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 text-gray-200 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="all">All Locations</option>
+                        <!-- Locations will be dynamically populated here -->
+                    </select>
+                </div>
+                <div>
+                    <label for="reportPropertyTypeFilter" class="block text-gray-400 text-sm font-bold mb-2">Property Type:</label>
+                    <select id="reportPropertyTypeFilter" class="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 text-gray-200 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="all">All Property Types</option>
+                        <!-- Property Types will be dynamically populated here -->
+                    </select>
+                </div>
+                <div>
+                    <label for="reportFormat" class="block text-gray-400 text-sm font-bold mb-2">Output Format:</label>
+                    <select id="reportFormat" class="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 text-gray-200 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="csv">CSV (Comma Separated Values)</option>
+                        <option value="pdf_summary">PDF Summary (Text-based)</option>
+                    </select>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700" onclick="document.getElementById('customReportModal').classList.add('hidden');">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">Generate Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        // Register the Chart.js Data Labels plugin globally
+        Chart.register(ChartDataLabels);
+
+        /**
+         * Helper function to get the day of the week abbreviation.
+         * @param {string} dateTimeString - ISO 8601 date-time string.
+         * @returns {string} Abbreviated day of the week (e.g., 'Sun', 'Mon').
+         */
+        function getDayOfWeekAbbr(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            return days[date.getDay()];
+        }
+
+        /**
+         * Helper function to categorize time of day into blocks.
+         * @param {string} dateTimeString - ISO 8601 date-time string.
+         * @returns {string} Time block (e.g., '08:00-10:00').
+         */
+        function getTimeOfDayBlock(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const hour = date.getHours();
+            if (hour >= 0 && hour < 4) return '0-4h';
+            if (hour >= 4 && hour < 8) return '4-8h';
+            if (hour >= 8 && hour < 10) return '8-10h';
+            if (hour >= 10 && hour < 12) return '10-12h';
+            if (hour >= 12 && hour < 14) return '12-14h';
+            if (hour >= 14 && hour < 16) return '14-16h';
+            if (hour >= 16 && hour < 18) return '16-18h';
+            if (hour >= 18 && hour < 20) return '18-20h';
+            if (hour >= 20 && hour < 22) return '20-22h';
+            if (hour >= 22 && hour <= 23) return '22-24h'; // Covers 22:00 to 23:59
+            return 'Unknown';
+        }
+
+        /**
+         * Helper function to determine the season based on the month for Adamawa State.
+         * Dry Season: November - March
+         * Rainy Season: April - October
+         * @param {string} dateTimeString - ISO 8601 date-time string.
+         * @returns {string} 'Dry' or 'Rainy'.
+         */
+        function getSeason(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const month = date.getMonth() + 1; // getMonth() returns 0-11
+            if (month >= 4 && month <= 10) { // April to October
+                return 'Rainy';
+            } else { // November to March
+                return 'Dry';
+            }
+        }
+
+        /**
+         * Generates a random integer within a specified range.
+         * @param {number} min - The minimum value (inclusive).
+         * @param {number} max - The maximum value (inclusive).
+         * @returns {number} A random integer.
+         */
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        /**
+         * Generates a realistic set of fire incidents for Adamawa State.
+         * This function creates a diverse dataset with varying locations, causes,
+         * severities, and seasonal distributions.
+         * @param {number} numIncidents - The desired number of incidents to generate.
+         * @returns {Array<Object>} An array of generated fire incident objects.
+         */
+        function generateRealisticFireIncidents(numIncidents) {
+            const incidents = [];
+            const locations = [
+                'Yola Town (Residential)', 'Jimeta Modern Market (Market)', 'Mubi North (Commercial)',
+                'Ganye LGA (Bushland)', 'Numan (Residential)', 'Mayo-Belwa (Residential)',
+                'Yola South (Office Building)', 'Fufore (Commercial)', 'Lamurde (Industrial)',
+                'Jada (Residential)', 'Gombi (Residential)', 'Hong Market (Market)',
+                'Shelleng (Bushland)', 'Demsa (Residential)', 'Song (Commercial)',
+                'Toungo (Residential)', 'Michika (Office Building)', 'Madagali (Residential)',
+                'Girei (Residential)', 'Guyuk (Bushland)', 'Yola North (Commercial)'
+            ];
+            const causes = [
+                'Electrical Fault', 'Cooking Accident', 'Bush Burning', 'Arson',
+                'Overloaded Circuit', 'Candle Left Unattended', 'Fuel Spill',
+                'Discarded Cigarette', 'Spontaneous Combustion', 'Faulty Heater',
+                'Gas Leak'
+            ];
+            const severities = ['Minor', 'Serious', 'Critical'];
+            const statuses = ['Reported', 'Active', 'Closed'];
+            const propertyTypes = ['Residential', 'Commercial', 'Market', 'Bushland', 'Industrial', 'Vehicle', 'Construction'];
+
+            const startYear = 2023;
+            const endYear = 2025;
+
+            for (let i = 0; i < numIncidents; i++) {
+                const year = getRandomInt(startYear, endYear);
+                const month = getRandomInt(1, 12);
+                const day = getRandomInt(1, 28); // Max 28 to avoid issues with Feb
+                const hour = getRandomInt(0, 23);
+                const minute = getRandomInt(0, 59);
+
+                // Adjust incident frequency based on season (more in dry season: Nov-Mar)
+                let incidentCountMultiplier = 1;
+                if (month >= 11 || month <= 3) { // November, December, January, February, March
+                    incidentCountMultiplier = getRandomInt(1, 3); // More incidents in dry season
+                } else {
+                    incidentCountMultiplier = getRandomInt(0, 1); // Fewer in rainy season
+                }
+                if (incidentCountMultiplier === 0 && incidents.length < numIncidents) {
+                    // Ensure we still generate enough incidents overall
+                    i--; // Decrement i to retry this iteration for a valid incident
+                    continue;
+                }
+
+                const dateTime = new Date(year, month - 1, day, hour, minute).toISOString().substring(0, 16); // YYYY-MM-DDTHH:MM
+
+                const cause = causes[getRandomInt(0, causes.length - 1)];
+                let severity = severities[getRandomInt(0, severities.length - 1)];
+                let responseTime = getRandomInt(5, 60); // 5 to 60 minutes
+                let areaAffected = getRandomInt(5, 1000); // 5 to 1000 sq. meters
+                let casualties = 0;
+                let injuries = 0;
+
+                // Make severity and impact more realistic based on cause
+                if (cause === 'Electrical Fault' || cause === 'Arson' || cause === 'Gas Leak') {
+                    severity = 'Critical';
+                    responseTime = getRandomInt(10, 30);
+                    areaAffected = getRandomInt(100, 2000);
+                    casualties = getRandomInt(0, 2);
+                    injuries = getRandomInt(0, 5);
+                } else if (cause === 'Bush Burning') {
+                    severity = getRandomInt(0, 1) === 0 ? 'Serious' : 'Minor';
+                    responseTime = getRandomInt(20, 60);
+                    areaAffected = getRandomInt(500, 5000); // Larger area for bush fires
+                } else if (cause === 'Cooking Accident') {
+                    severity = getRandomInt(0, 1) === 0 ? 'Minor' : 'Serious';
+                    responseTime = getRandomInt(5, 20);
+                    areaAffected = getRandomInt(5, 50);
+                    injuries = getRandomInt(0, 2);
+                }
+
+                const status = statuses[getRandomInt(0, statuses.length - 1)];
+                const location = locations[getRandomInt(0, locations.length - 1)];
+                const propertyType = propertyTypes[getRandomInt(0, propertyTypes.length - 1)];
+
+                incidents.push({
+                    id: `FI-AD${(incidents.length + 1).toString().padStart(3, '0')}`,
+                    location: location,
+                    dateTime: dateTime,
+                    cause: cause,
+                    severity: severity,
+                    status: status,
+                    areaAffected: areaAffected,
+                    casualties: casualties,
+                    injuries: injuries,
+                    responseTime: responseTime,
+                    propertyType: propertyType,
+                    dayOfWeek: getDayOfWeekAbbr(dateTime),
+                    timeOfDay: getTimeOfDayBlock(dateTime),
+                    season: getSeason(dateTime)
+                });
+            }
+            return incidents;
+        }
+
+        // Generate 120 realistic fire incidents
+        const fireIncidents = generateRealisticFireIncidents(120);
+
+
+        /**
+         * Generic function to create or update a Chart.js chart.
+         * It destroys any existing chart on the canvas before creating a new one,
+         * ensuring a clean slate and preventing rendering issues.
+         * @param {string} ctxId - The ID of the canvas element.
+         * @param {string} type - The type of chart (e.g., 'bar', 'line', 'doughnut').
+         * @param {Array} labels - Labels for the chart's data points.
+         * @param {Array} data - Data values for the chart.
+         * @param {string} label - Label for the dataset.
+         * @param {string|Array} backgroundColor - Background color(s) for the chart elements.
+         * @param {string|Array} borderColor - Border color(s) for the chart elements.
+         * @param {boolean} [fill=false] - Whether to fill the area under the line (for line charts).
+         * @param {number} [tension=0] - Line tension (for line charts, 0 for straight lines).
+         * @param {Array} [datasets=null] - Optional: provide full datasets array for multi-line charts or complex data.
+         * @param {boolean} [showDatalabels=true] - Whether to show datalabels on the chart.
+         * @param {number} [yAxisMax=null] - Optional: explicit max value for Y-axis.
+         */
+        function createChart(ctxId, type, labels, data, label, backgroundColor, borderColor, fill = false, tension = 0, datasets = null, showDatalabels = true, yAxisMax = null) {
+            const canvas = document.getElementById(ctxId);
+            if (!canvas) {
+                console.error(`Canvas element with ID '${ctxId}' not found.`);
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+
+            // Get the actual display size of the canvas's parent container
+            const parent = canvas.parentElement;
+            const computedStyle = getComputedStyle(parent);
+            const displayWidth = parseFloat(computedStyle.width);
+            const displayHeight = parseFloat(computedStyle.height);
+
+            // Set the canvas element's width and height attributes to match its display size
+            // multiplied by the device pixel ratio for sharper rendering
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = displayWidth * dpr;
+            canvas.height = displayHeight * dpr;
+
+            // Ensure the canvas is styled to fit its container
+            canvas.style.width = `${displayWidth}px`;
+            canvas.style.height = `${displayHeight}px`;
+
+            // If a chart already exists on this canvas, destroy it to prevent duplicates
+            if (Chart.getChart(ctxId)) {
+                Chart.getChart(ctxId).destroy();
+            }
+
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                devicePixelRatio: dpr, // Crucial for high-DPI screens
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#FFECEC' /* Light red-pink for legend text */
+                        }
+                    },
+                    datalabels: {
+                        color: '#fff',
+                        font: {
+                            weight: 'bold'
+                        },
+                        display: showDatalabels // Control datalabel visibility
+                    },
+                    tooltip: {
+                        callbacks: {} // Initialize callbacks object for tooltips
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#FFECEC' /* Light red-pink for Y-axis labels */
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)' /* Light grid lines */
+                        },
+                        max: yAxisMax // Set max value if provided
+                    },
+                    x: {
+                        ticks: {
+                            color: '#FFECEC' /* Light red-pink for X-axis labels */
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            };
+
+            // Specific options for Doughnut chart
+            if (type === 'doughnut') {
+                chartOptions.plugins.datalabels.formatter = (value, context) => {
+                    const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(0) + '%' : '0%';
+                    return value > 0 ? `${value} (${percentage})` : '';
+                };
+                chartOptions.plugins.tooltip.callbacks.label = function(context) {
+                    let label = context.label || '';
+                    if (label) {
+                        label += ': ';
+                    }
+                    const value = context.raw;
+                    const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                    return `${label}${value} (${percentage}%)`;
+                };
+            }
+
+            // Specific options for Bar chart
+            if (type === 'bar') {
+                chartOptions.plugins.datalabels.anchor = 'end';
+                chartOptions.plugins.datalabels.align = 'top';
+                chartOptions.plugins.datalabels.formatter = (value) => value > 0 ? value : '';
+                // Optimize x-axis labels for long names (e.g., Top 10 Locations, Causes by Property Type)
+                chartOptions.scales.x.ticks.autoSkip = true;
+                chartOptions.scales.x.ticks.maxRotation = 45; // Rotate labels if they are long
+                chartOptions.scales.x.ticks.minRotation = 0;
+            }
+
+            // Specific options for Line chart
+            if (type === 'line') {
+                chartOptions.plugins.datalabels.display = false; // Disable datalabels for line chart points by default
+                chartOptions.plugins.tooltip.callbacks.title = function(context) {
+                    const date = new Date(context[0].label);
+                    return date.toLocaleString('en-US', { year: 'numeric', month: 'long' });
+                };
+            }
+
+
+            new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: datasets || [{ // Use provided datasets or default
+                        label: label,
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
+                        borderWidth: 1,
+                        fill: fill,
+                        tension: tension,
+                        pointBackgroundColor: '#EF4444', // Specific for line chart points
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        /**
+         * Updates the summary statistics displayed on the dashboard.
+         * This function processes the `fireIncidents` data to calculate and display key metrics.
+         * @param {Array} incidents - The array of incidents to use for calculations.
+         */
+        function updateSummaryStatistics(incidents) {
+            document.getElementById('totalIncidents').textContent = incidents.length;
+            document.getElementById('activeIncidents').textContent = incidents.filter(i => i.status === 'Active').length;
+            document.getElementById('totalFatalities').textContent = incidents.reduce((sum, i) => sum + (i.casualties || 0), 0);
+
+            const totalResponseTime = incidents.reduce((sum, i) => sum + (i.responseTime || 0), 0);
+            const avgResponseTime = incidents.length > 0 ? (totalResponseTime / incidents.length).toFixed(1) : 0;
+            document.getElementById('avgResponseTime').textContent = avgResponseTime;
+
+            const totalAreaAffected = incidents.reduce((sum, i) => sum + (i.areaAffected || 0), 0);
+            const avgDamageArea = incidents.length > 0 ? (totalAreaAffected / incidents.length).toFixed(1) : 0;
+            document.getElementById('avgDamageArea').textContent = avgDamageArea;
+
+            const causeCounts = incidents.reduce((acc, incident) => {
+                acc[incident.cause] = (acc[incident.cause] || 0) + 1;
+                return acc;
+            }, {});
+            const mostCommonCause = Object.keys(causeCounts).length > 0 ? Object.keys(causeCounts).reduce((a, b) => causeCounts[a] > causeCounts[b] ? a : b) : 'N/A';
+            document.getElementById('mostCommonCause').textContent = mostCommonCause;
+
+            const dayOfWeekCounts = incidents.reduce((acc, incident) => {
+                acc[incident.dayOfWeek] = (acc[incident.dayOfWeek] || 0) + 1;
+                return acc;
+            }, {});
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const mostReportsDay = days.length > 0 && Object.values(dayOfWeekCounts).some(v => v > 0) ? days.find(day => dayOfWeekCounts[day] === Math.max(...Object.values(dayOfWeekCounts))) : 'N/A';
+            document.getElementById('reportsByDay').textContent = mostReportsDay;
+
+            const timeOfDayCounts = incidents.reduce((acc, incident) => {
+                acc[incident.timeOfDay] = (acc[incident.timeOfDay] || 0) + 1;
+                return acc;
+            }, {});
+            const timeBlocks = ['0-4h', '4-8h', '8-10h', '10-12h', '12-14h', '14-16h', '16-18h', '18-20h', '20-22h', '22-24h'];
+            const mostReportsHour = timeBlocks.length > 0 && Object.values(timeOfDayCounts).some(v => v > 0) ? timeBlocks.find(block => timeOfDayCounts[block] === Math.max(...Object.values(timeOfDayCounts))) : 'N/A';
+            document.getElementById('reportsByHour').textContent = mostReportsHour;
+        }
+
+        /**
+         * Renders the 'Annual Report Trend' line chart.
+         * This chart visualizes the number of fire incidents per year.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderAnnualReportTrendChart(incidents) {
+            const annualCounts = {};
+            incidents.forEach(incident => {
+                const year = new Date(incident.dateTime).getFullYear();
+                annualCounts[year] = (annualCounts[year] || 0) + 1;
+            });
+
+            const sortedYears = Object.keys(annualCounts).sort();
+            const data = sortedYears.map(year => annualCounts[year]);
+
+            // Determine max Y-axis value for annual trend (add some padding)
+            const maxAnnualCount = Math.max(...data);
+            const yAxisMaxAnnual = maxAnnualCount > 0 ? Math.ceil(maxAnnualCount / 10) * 10 + 10 : 20; // Round up to nearest 10 and add 10, min 20
+
+            createChart(
+                'annualReportTrendChart',
+                'line',
+                sortedYears,
+                data,
+                'Reports', /* Shortened label */
+                'rgba(239, 68, 68, 0.2)', /* Light red fill */
+                '#EF4444', /* Red line */
+                true, // fill
+                0.3, // tension
+                null, // datasets
+                false, // showDatalabels
+                yAxisMaxAnnual // yAxisMax
+            );
+        }
+
+        /**
+         * Renders the 'Fire Incidents by Month' line chart.
+         * This chart shows the trend of incidents across months.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderMonthlyTrendsChart(incidents) {
+            const monthlyCounts = {};
+            incidents.forEach(incident => {
+                const date = new Date(incident.dateTime);
+                // Format as YYYY-MM to ensure correct sorting across years
+                const yearMonth = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                monthlyCounts[yearMonth] = (monthlyCounts[yearMonth] || 0) + 1;
+            });
+
+            // Sort months chronologically (e.g., "2023-01", "2023-02", "2024-01")
+            const sortedMonths = Object.keys(monthlyCounts).sort();
+            const data = sortedMonths.map(month => monthlyCounts[month]);
+
+            // Determine max Y-axis value for monthly trends (add some padding)
+            const maxMonthlyCount = Math.max(...data);
+            const yAxisMaxMonthly = maxMonthlyCount > 0 ? Math.ceil(maxMonthlyCount / 5) * 5 + 5 : 10; // Round up to nearest 5 and add 5, min 10
+
+            createChart(
+                'monthlyTrendsChart',
+                'line',
+                sortedMonths,
+                data,
+                'Incidents', /* Shortened label */
+                'rgba(239, 68, 68, 0.2)', /* Light red fill */
+                '#EF4444', /* Red line */
+                true, // fill
+                0.3, // tension
+                null, // datasets
+                false, // showDatalabels
+                yAxisMaxMonthly // yAxisMax
+            );
+        }
+
+        /**
+         * Renders the 'Top 10 Fire Locations' bar chart.
+         * This chart highlights areas with the highest number of reported incidents.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderTopLocationsChart(incidents) {
+            const locationCounts = incidents.reduce((acc, incident) => {
+                acc[incident.location] = (acc[incident.location] || 0) + 1;
+                return acc;
+            }, {});
+
+            const sortedLocations = Object.entries(locationCounts)
+                .sort(([, countA], [, countB]) => countB - countA)
+                .slice(0, 10); // Get top 10
+
+            // Shorten labels for display if they are too long to prevent overlap
+            const labels = sortedLocations.map(([location]) => {
+                const parts = location.split(' (')[0]; // Get only location name, remove property type in parentheses
+                return parts.length > 20 ? parts.substring(0, 17) + '...' : parts;
+            });
+            const data = sortedLocations.map(([, count]) => count);
+            const backgroundColors = labels.map((_, i) => `rgba(${255 - i * 10}, ${99 + i * 5}, ${71 + i * 10}, 0.8)`);
+            const borderColors = labels.map((_, i) => `rgba(${255 - i * 10}, ${99 + i * 5}, ${71 + i * 10}, 1)`);
+
+            // Determine max Y-axis value for top locations (add some padding)
+            const maxLocationCount = Math.max(...data);
+            const yAxisMaxLocations = maxLocationCount > 0 ? Math.ceil(maxLocationCount / 5) * 5 + 5 : 10; // Round up to nearest 5 and add 5, min 10
+
+            createChart('topLocationsChart', 'bar', labels, data, 'Incidents', backgroundColors, borderColors, false, 0, null, true, yAxisMaxLocations);
+        }
+
+        /**
+         * Renders the 'Fire Incidents by Day of Week' bar chart.
+         * This chart helps identify patterns in incidents based on the day of the week.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderDayOfWeekChart(incidents) {
+            const dayOfWeekCounts = { 'Sun': 0, 'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0 };
+            incidents.forEach(incident => {
+                dayOfWeekCounts[incident.dayOfWeek]++;
+            });
+
+            // Use shortened labels for better chart readability
+            const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const data = labels.map(day => dayOfWeekCounts[day] || 0);
+            const backgroundColors = labels.map((_, i) => `rgba(${255 - i * 5}, ${140 + i * 5}, ${0 + i * 10}, 0.8)`);
+            const borderColors = labels.map((_, i) => `rgba(${255 - i * 5}, ${140 + i * 5}, ${0 + i * 10}, 1)`);
+
+            // Determine max Y-axis value for day of week (add some padding)
+            const maxDayCount = Math.max(...data);
+            const yAxisMaxDay = maxDayCount > 0 ? Math.ceil(maxDayCount / 5) * 5 + 5 : 10; // Round up to nearest 5 and add 5, min 10
+
+            createChart('dayOfWeekChart', 'bar', labels, data, 'Reports', backgroundColors, borderColors, false, 0, null, true, yAxisMaxDay);
+        }
+
+        /**
+         * Renders the 'Fire Incidents by Time of Day' bar chart.
+         * This chart reveals peak hours for fire incidents.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderTimeOfDayChart(incidents) {
+            const timeOfDayCounts = {
+                '0-4h': 0, '4-8h': 0, '8-10h': 0, '10-12h': 0, '12-14h': 0,
+                '14-16h': 0, '16-18h': 0, '18-20h': 0, '20-22h': 0, '22-24h': 0
+            };
+            incidents.forEach(incident => {
+                timeOfDayCounts[incident.timeOfDay]++;
+            });
+
+            // Use shortened labels for time blocks for better chart readability
+            const labels = ['0-4h', '4-8h', '8-10h', '10-12h', '12-14h', '14-16h', '16-18h', '18-20h', '20-22h', '22-24h'];
+            const data = labels.map(block => timeOfDayCounts[block] || 0);
+            const backgroundColors = labels.map((_, i) => `rgba(${255 - i * 7}, ${165 + i * 3}, ${0 + i * 5}, 0.8)`);
+            const borderColors = labels.map((_, i) => `rgba(${255 - i * 7}, ${165 + i * 3}, ${0 + i * 5}, 1)`);
+
+            // Determine max Y-axis value for time of day (add some padding)
+            const maxTimeCount = Math.max(...data);
+            const yAxisMaxTime = maxTimeCount > 0 ? Math.ceil(maxTimeCount / 5) * 5 + 5 : 10; // Round up to nearest 5 and add 5, min 10
+
+            createChart('timeOfDayChart', 'bar', labels, data, 'Reports', backgroundColors, borderColors, false, 0, null, true, yAxisMaxTime);
+        }
+
+        /**
+         * Renders the 'Seasonal Trend' bar chart.
+         * This chart helps understand how fire incidents vary by season.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderSeasonalTrendChart(incidents) {
+            const seasonalCounts = { 'Dry': 0, 'Rainy': 0 };
+            incidents.forEach(incident => {
+                seasonalCounts[incident.season]++;
+            });
+
+            const labels = ['Dry', 'Rainy']; // Assuming two main seasons based on data
+            const data = labels.map(season => seasonalCounts[season] || 0);
+            const backgroundColors = ['rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)']; // Red for Dry, Blue for Rainy
+            const borderColors = ['rgba(239, 68, 68, 1)', 'rgba(59, 130, 246, 1)'];
+
+            // Determine max Y-axis value for seasonal trend (add some padding)
+            const maxSeasonalCount = Math.max(...data);
+            const yAxisMaxSeasonal = maxSeasonalCount > 0 ? Math.ceil(maxSeasonalCount / 10) * 10 + 10 : 20; // Round up to nearest 10 and add 10, min 20
+
+            createChart('seasonalTrendChart', 'bar', labels, data, 'Reports', backgroundColors, borderColors, false, 0, null, true, yAxisMaxSeasonal);
+        }
+
+        /**
+         * Renders the 'Average Response Time by Severity' bar chart.
+         * This chart shows the efficiency of response based on incident severity.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderResponseTimeBySeverityChart(incidents) {
+            const severityResponseTimes = { 'Critical': { sum: 0, count: 0 }, 'Serious': { sum: 0, count: 0 }, 'Minor': { sum: 0, count: 0 } };
+            incidents.forEach(incident => {
+                if (incident.responseTime !== undefined && incident.responseTime !== null) {
+                    severityResponseTimes[incident.severity].sum += incident.responseTime;
+                    severityResponseTimes[incident.severity].count++;
+                }
+            });
+
+            const labels = ['Critical', 'Serious', 'Minor'];
+            const data = labels.map(severity =>
+                severityResponseTimes[severity].count > 0 ? (severityResponseTimes[severity].sum / severityResponseTimes[severity].count).toFixed(1) : 0
+            );
+
+            // Determine the maximum value in the data to set an appropriate yAxisMax
+            const maxResponseTime = Math.max(...data.map(Number));
+            // Add a fixed padding to the max value to ensure labels are visible
+            const yAxisMax = maxResponseTime > 0 ? Math.ceil(maxResponseTime / 5) * 5 + 5 : 10; // Ensure a minimum max of 10 if data is all zeros
+
+            const backgroundColors = [
+                'rgba(220, 38, 38, 0.8)', /* Critical - Darker Red */
+                'rgba(249, 115, 22, 0.8)', /* Serious - Orange */
+                'rgba(250, 204, 21, 0.8)'  /* Minor - Yellow */
+            ];
+            const borderColors = [
+                'rgba(220, 38, 38, 1)',
+                'rgba(249, 115, 22, 1)',
+                'rgba(250, 204, 21, 1)'
+            ];
+
+            createChart('responseTimeBySeverityChart', 'bar', labels, data, 'Avg. Time (min)', backgroundColors, borderColors, false, 0, null, true, yAxisMax); /* Shortened label */
+        }
+
+        /**
+         * Renders the 'Fire Causes by Property Type' stacked bar chart.
+         * This chart provides insights into common causes across different property types.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderCausesByPropertyTypeChart(incidents) {
+            const propertyTypes = ['Residential', 'Commercial', 'Market', 'Bushland', 'Industrial', 'Vehicle', 'Construction'];
+            const causes = ['Electrical Fault', 'Cooking Accident', 'Bush Burning', 'Arson', 'Overloaded Circuit', 'Candle Left Unattended', 'Fuel Spill', 'Discarded Cigarette', 'Spontaneous Combustion', 'Faulty Heater', 'Gas Leak'];
+
+            const datasets = [];
+            const backgroundColors = [
+                'rgba(255, 99, 132, 0.8)',  // Red
+                'rgba(54, 162, 235, 0.8)',  // Blue
+                'rgba(255, 206, 86, 0.8)',  // Yellow
+                'rgba(75, 192, 192, 0.8)',  // Green
+                'rgba(153, 102, 255, 0.8)', // Purple
+                'rgba(255, 159, 64, 0.8)',  // Orange
+                'rgba(199, 199, 199, 0.8)', // Gray
+                'rgba(83, 102, 255, 0.8)',  // Indigo
+                'rgba(201, 203, 207, 0.8)', // Light Gray
+                'rgba(255, 0, 0, 0.8)',     // Bright Red
+                'rgba(0, 255, 0, 0.8)'      // Bright Green
+            ];
+
+            causes.forEach((cause, causeIndex) => {
+                const dataForCause = propertyTypes.map(propType => {
+                    return incidents.filter(inc => inc.cause === cause && inc.propertyType === propType).length;
+                });
+
+                datasets.push({
+                    label: cause,
+                    data: dataForCause,
+                    backgroundColor: backgroundColors[causeIndex % backgroundColors.length],
+                    borderColor: backgroundColors[causeIndex % backgroundColors.length].replace('0.8', '1'),
+                    borderWidth: 1
+                });
+            });
+
+            // Calculate max Y-axis value for stacked bar chart
+            let maxYValue = 0;
+            if (datasets.length > 0) {
+                // Sum up values for each property type to find the max stack height
+                const sumsByPropertyType = new Array(propertyTypes.length).fill(0);
+                datasets.forEach(dataset => {
+                    dataset.data.forEach((value, index) => {
+                        sumsByPropertyType[index] += value;
+                    });
+                });
+                maxYValue = Math.max(...sumsByPropertyType);
+            }
+            const yAxisMaxCausesByProperty = maxYValue > 0 ? Math.ceil(maxYValue / 10) * 10 + 10 : 20; // Round up to nearest 10 and add 10, min 20
+
+            createChart(
+                'causesByPropertyTypeChart',
+                'bar',
+                propertyTypes,
+                null,
+                null,
+                null,
+                null,
+                false,
+                0,
+                datasets,
+                false, // Do not show datalabels for stacked bar by default
+                yAxisMaxCausesByProperty // yAxisMax
+            );
+
+            // Custom options for stacked bar chart to ensure proper stacking and tooltip behavior
+            const chart = Chart.getChart('causesByPropertyTypeChart');
+            if (chart) {
+                chart.options.scales.x.stacked = true;
+                chart.options.scales.y.stacked = true;
+                chart.options.plugins.tooltip.mode = 'index';
+                chart.options.plugins.tooltip.intersect = false;
+                chart.update();
+            }
+        }
+
+        /**
+         * Renders the 'Response Time Distribution' bar chart.
+         * This chart visualizes how response times are distributed across different bins.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderResponseTimeDistributionChart(incidents) {
+            const responseTimeBins = {
+                '0-10 min': 0,
+                '11-20 min': 0,
+                '21-30 min': 0,
+                '31-40 min': 0,
+                '40+ min': 0
+            };
+
+            incidents.forEach(incident => {
+                const rt = incident.responseTime;
+                if (rt !== undefined && rt !== null) {
+                    if (rt <= 10) responseTimeBins['0-10 min']++;
+                    else if (rt <= 20) responseTimeBins['11-20 min']++;
+                    else if (rt <= 30) responseTimeBins['21-30 min']++;
+                    else if (rt <= 40) responseTimeBins['31-40 min']++;
+                    else responseTimeBins['40+ min']++;
+                }
+            });
+
+            const labels = Object.keys(responseTimeBins);
+            const data = Object.values(responseTimeBins);
+            const backgroundColors = labels.map((_, i) => `rgba(${0 + i * 20}, ${200 - i * 20}, ${200 - i * 20}, 0.8)`);
+            const borderColors = labels.map((_, i) => `rgba(${0 + i * 20}, ${200 - i * 20}, ${200 - i * 20}, 1)`);
+
+            // Determine max Y-axis value for response time distribution (add some padding)
+            const maxDistributionCount = Math.max(...data);
+            const yAxisMaxDistribution = maxDistributionCount > 0 ? Math.ceil(maxDistributionCount / 5) * 5 + 5 : 10; // Round up to nearest 5 and add 5, min 10
+
+            createChart('responseTimeDistributionChart', 'bar', labels, data, 'Reports', backgroundColors, borderColors, false, 0, null, true, yAxisMaxDistribution);
+        }
+
+        /**
+         * Renders the 'Incidents by Property Type' pie chart.
+         * This chart shows the distribution of incidents across different property categories.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderPropertyTypeBreakdownChart(incidents) {
+            const propertyTypeCounts = incidents.reduce((acc, incident) => {
+                acc[incident.propertyType] = (acc[incident.propertyType] || 0) + 1;
+                return acc;
+            }, {});
+
+            const labels = Object.keys(propertyTypeCounts);
+            const data = Object.values(propertyTypeCounts);
+            const backgroundColors = [
+                'rgba(255, 99, 132, 0.8)', // Residential
+                'rgba(54, 162, 235, 0.8)', // Commercial
+                'rgba(255, 206, 86, 0.8)', // Market
+                'rgba(75, 192, 192, 0.8)', // Bushland
+                'rgba(153, 102, 255, 0.8)',// Industrial
+                'rgba(255, 159, 64, 0.8)', // Vehicle
+                'rgba(199, 199, 199, 0.8)' // Construction
+            ];
+            const borderColors = backgroundColors.map(color => color.replace('0.8', '1'));
+
+            createChart('propertyTypeBreakdownChart', 'doughnut', labels, data, 'Incidents', backgroundColors, borderColors);
+        }
+
+
+        /**
+         * Main function to update all dashboard components based on the provided incident data.
+         * This function orchestrates the rendering of all summary statistics and charts.
+         * @param {Array} incidentsToDisplay - The array of incidents to use for rendering.
+         */
+        function updateDashboard(incidentsToDisplay) {
+            updateSummaryStatistics(incidentsToDisplay);
+            renderAnnualReportTrendChart(incidentsToDisplay);
+            renderMonthlyTrendsChart(incidentsToDisplay);
+            renderTopLocationsChart(incidentsToDisplay);
+            renderDayOfWeekChart(incidentsToDisplay);
+            renderTimeOfDayChart(incidentsToDisplay);
+            renderSeasonalTrendChart(incidentsToDisplay);
+            renderResponseTimeBySeverityChart(incidentsToDisplay);
+            renderCausesByPropertyTypeChart(incidentsToDisplay);
+            renderResponseTimeDistributionChart(incidentsToDisplay);
+            renderPropertyTypeBreakdownChart(incidentsToDisplay);
+        }
+
+        /**
+         * Converts an array of JavaScript objects into a CSV (Comma Separated Values) string.
+         * This is useful for exporting tabular data.
+         * @param {Array<Object>} data - The array of objects to convert. Each object should have consistent keys.
+         * @returns {string} The CSV string, including headers and quoted values.
+         */
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+
+            // Extract headers from the first object's keys
+            const headers = Object.keys(data[0]);
+            const csvRows = [];
+
+            // Add the header row to the CSV
+            csvRows.push(headers.join(','));
+
+            // Iterate over each data row and format its values for CSV
+            for (const row of data) {
+                const values = headers.map(header => {
+                    // Ensure values are strings and escape any double quotes by doubling them
+                    const escaped = ('' + row[header]).replace(/"/g, '""');
+                    // Wrap values in double quotes to handle commas within data fields
+                    return `"${escaped}"`;
+                });
+                csvRows.push(values.join(','));
+            }
+
+            // Join all rows with newline characters to form the complete CSV string
+            return csvRows.join('\n');
+        }
+
+        /**
+         * Triggers the download of a file to the user's browser.
+         * This function creates a Blob from the content and initiates a download.
+         * @param {string} content - The content of the file (e.g., CSV string, base64 image data).
+         * @param {string} filename - The desired name of the file (e.g., 'data.csv', 'chart.png').
+         * @param {string} mimeType - The MIME type of the file (e.g., 'text/csv', 'image/png').
+         */
+        function downloadFile(content, filename, mimeType) {
+            // Create a Blob object from the content with the specified MIME type
+            const blob = new Blob([content], { type: mimeType });
+            // Create a URL for the Blob object
+            const url = URL.createObjectURL(blob);
+            // Create a temporary anchor (<a>) element
+            const a = document.createElement('a');
+            // Set the href of the anchor to the Blob URL
+            a.href = url;
+            // Set the download attribute to the desired filename, which prompts a download
+            a.download = filename;
+            // Append the anchor to the document body (necessary for Firefox)
+            document.body.appendChild(a);
+            // Programmatically click the anchor to trigger the download
+            a.click();
+            // Remove the temporary anchor from the document body
+            document.body.removeChild(a);
+            // Revoke the Blob URL to free up resources
+            URL.revokeObjectURL(url);
+        }
+
+        /**
+         * Exports all current fire incidents data (from `fireIncidents` array) to a CSV file.
+         * This function is triggered by the "Export All Data (CSV)" button.
+         */
+        function exportDataToCSV() {
+            // Convert the JavaScript array of incident objects into a CSV string
+            const csvContent = convertToCSV(fireIncidents);
+            // Initiate the download of the CSV file
+            downloadFile(csvContent, 'fire_incidents_data.csv', 'text/csv');
+            // Show a custom alert to confirm the export
+            showCustomAlert('All incident data has been exported to CSV.', 'Export Successful');
+        }
+
+        /**
+         * Exports all Chart.js charts displayed on the dashboard as PNG images.
+         * This function iterates through all canvas elements within '.chart-wrapper' and exports them.
+         * It's triggered by the "Export Charts (PNG)" button.
+         */
+        function exportChartsToPNG() {
+            // Select all canvas elements that are used for Chart.js charts
+            const chartCanvases = document.querySelectorAll('.chart-wrapper canvas');
+            if (chartCanvases.length === 0) {
+                // If no charts are found, inform the user
+                showCustomAlert('No charts found to export.', 'Export Failed');
+                return;
+            }
+
+            // Iterate over each chart canvas
+            chartCanvases.forEach((canvas, index) => {
+                try {
+                    // Get the Chart.js instance associated with the canvas
+                    const chart = Chart.getChart(canvas.id);
+                    if (chart) {
+                        // Get the chart's content as a base64 encoded PNG image data URL
+                        const dataURL = chart.toBase64Image();
+                        // Construct a filename based on the canvas ID
+                        const filename = `${canvas.id}_chart.png`;
+                        // Create a temporary anchor element to trigger the download
+                        const a = document.createElement('a');
+                        a.href = dataURL;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    } else {
+                        // Log a warning if a Chart.js instance isn't found for a canvas
+                        console.warn(`Chart instance not found for canvas ID: ${canvas.id}. Skipping export.`);
+                    }
+                } catch (error) {
+                    // Catch and log any errors during the export process for a specific chart
+                    console.error(`Error exporting chart ${canvas.id}:`, error);
+                    showCustomAlert(`Failed to export chart ${canvas.id}. Please try again.`, 'Export Error');
+                }
+            });
+            // Show a custom alert to confirm the overall chart export
+            showCustomAlert('All charts have been exported as PNG images.', 'Export Successful');
+        }
+
+        /**
+         * Opens the custom report generation modal and populates its filters.
+         */
+        function generateCustomReport() {
+            const customReportModal = document.getElementById('customReportModal');
+            customReportModal.classList.remove('hidden');
+            populateReportFilters(); // Populate location and property type dropdowns
+        }
+
+        /**
+         * Populates the location and property type filter dropdowns in the custom report modal
+         * with unique values from the fire incidents data.
+         */
+        function populateReportFilters() {
+            const locationFilter = document.getElementById('reportLocationFilter');
+            const propertyTypeFilter = document.getElementById('reportPropertyTypeFilter');
+
+            // Clear existing options, keep "All" options
+            locationFilter.innerHTML = '<option value="all">All Locations</option>';
+            propertyTypeFilter.innerHTML = '<option value="all">All Property Types</option>';
+
+            const uniqueLocations = new Set();
+            const uniquePropertyTypes = new Set();
+
+            fireIncidents.forEach(incident => {
+                uniqueLocations.add(incident.location);
+                uniquePropertyTypes.add(incident.propertyType);
+            });
+
+            Array.from(uniqueLocations).sort().forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationFilter.appendChild(option);
+            });
+
+            Array.from(uniquePropertyTypes).sort().forEach(propertyType => {
+                const option = document.createElement('option');
+                option.value = propertyType;
+                option.textContent = propertyType;
+                propertyTypeFilter.appendChild(option);
+            });
+        }
+
+        /**
+         * Processes the custom report generation based on selected filters and format.
+         * This function is triggered when the "Generate Report" button in the modal is clicked.
+         */
+        function processReportGeneration(event) {
+            event.preventDefault(); // Prevent form default submission
+
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const severityFilter = document.getElementById('reportSeverityFilter').value;
+            const locationFilter = document.getElementById('reportLocationFilter').value;
+            const propertyTypeFilter = document.getElementById('reportPropertyTypeFilter').value;
+            const format = document.getElementById('reportFormat').value;
+
+            // Filter incidents based on selected criteria
+            const filteredIncidents = fireIncidents.filter(incident => {
+                const incidentDate = new Date(incident.dateTime);
+                const startDateTime = startDate ? new Date(startDate) : null;
+                const endDateTime = endDate ? new Date(endDate) : null;
+
+                const matchesDate = (!startDateTime || incidentDate >= startDateTime) &&
+                                    (!endDateTime || incidentDate <= endDateTime);
+                const matchesSeverity = severityFilter === 'all' || incident.severity === severityFilter;
+                const matchesLocation = locationFilter === 'all' || incident.location === locationFilter;
+                const matchesPropertyType = propertyTypeFilter === 'all' || incident.propertyType === propertyTypeFilter;
+
+                return matchesDate && matchesSeverity && matchesLocation && matchesPropertyType;
+            });
+
+            let reportContent = '';
+            let filename = 'custom_fire_report';
+            let mimeType = '';
+
+            if (format === 'csv') {
+                reportContent = convertToCSV(filteredIncidents);
+                filename += '.csv';
+                mimeType = 'text/csv';
+            } else if (format === 'pdf_summary') {
+                reportContent = generatePdfSummary(filteredIncidents, {
+                    startDate, endDate, severityFilter, locationFilter, propertyTypeFilter
+                });
+                filename += '.txt'; // Using .txt for a simple text-based summary
+                mimeType = 'text/plain';
+            }
+
+            if (filteredIncidents.length > 0) {
+                downloadFile(reportContent, filename, mimeType);
+                showCustomAlert(`Custom report generated successfully as ${filename}!`, 'Report Generated');
+            } else {
+                showCustomAlert('No fire incidents found matching your selected criteria for the report.', 'No Data');
+            }
+
+            document.getElementById('customReportModal').classList.add('hidden'); // Close the modal
+        }
+
+        /**
+         * Generates a text-based summary resembling a PDF report.
+         * This includes key statistics and a list of filtered incidents.
+         * @param {Array<Object>} incidents - The filtered fire incidents.
+         * @param {Object} filters - The filters applied to generate this report.
+         * @returns {string} A formatted text summary.
+         */
+        function generatePdfSummary(incidents, filters) {
+            let summary = `Fire Analytics Report - Adamawa State\n`;
+            summary += `Generated On: ${new Date().toLocaleString()}\n\n`;
+
+            summary += `--- Report Parameters ---\n`;
+            summary += `Date Range: ${filters.startDate || 'All Time'} to ${filters.endDate || 'All Time'}\n`;
+            summary += `Severity: ${filters.severityFilter}\n`;
+            summary += `Location: ${filters.locationFilter}\n`;
+            summary += `Property Type: ${filters.propertyTypeFilter}\n\n`;
+
+            summary += `--- Summary Statistics ---\n`;
+            summary += `Total Incidents: ${incidents.length}\n`;
+            summary += `Total Fatalities: ${incidents.reduce((sum, i) => sum + (i.casualties || 0), 0)}\n`;
+            summary += `Total Injuries: ${incidents.reduce((sum, i) => sum + (i.injuries || 0), 0)}\n`;
+            summary += `Total Area Affected: ${incidents.reduce((sum, i) => sum + (i.areaAffected || 0), 0).toFixed(1)} sq.m\n`;
+
+
+            const uniqueCauses = [...new Set(incidents.map(i => i.cause))];
+            summary += `Unique Causes: ${uniqueCauses.join(', ') || 'N/A'}\n`;
+
+            const avgResponseTime = incidents.length > 0 ? (incidents.reduce((sum, i) => sum + (i.responseTime || 0), 0) / incidents.length).toFixed(1) : '0';
+            summary += `Average Response Time: ${avgResponseTime} minutes\n\n`;
+
+            summary += `--- Incident Details (First 10, if available) ---\n`;
+            if (incidents.length === 0) {
+                summary += "No incidents to display.\n";
+            } else {
+                incidents.slice(0, 10).forEach((incident, index) => {
+                    summary += `\nIncident #${index + 1}\n`;
+                    summary += `  ID: ${incident.id}\n`;
+                    summary += `  Location: ${incident.location}\n`;
+                    summary += `  Date/Time: ${new Date(incident.dateTime).toLocaleString()}\n`;
+                    summary += `  Cause: ${incident.cause}\n`;
+                    summary += `  Severity: ${incident.severity}\n`;
+                    summary += `  Status: ${incident.status}\n`;
+                    summary += `  Fatalities: ${incident.casualties}\n`;
+                    summary += `  Injuries: ${incident.injuries}\n`;
+                    summary += `  Area Affected: ${incident.areaAffected} sq.m\n`;
+                });
+                if (incidents.length > 10) {
+                    summary += `\n... and ${incidents.length - 10} more incidents.\n`;
+                }
+            }
+
+            summary += `\n--- End of Report ---\n`;
+            return summary;
+        }
+
+
+        /**
+         * Displays a custom alert message as a modal overlay.
+         * This replaces browser's native `alert()` for better UI consistency and control.
+         * @param {string} message - The main message content to display.
+         * @param {string} title - The title for the alert modal.
+         */
+        function showCustomAlert(message, title = 'Alert') {
+            const customAlert = document.createElement('div');
+            // Apply Tailwind classes for fixed positioning, overlay background, centering, and high z-index
+            customAlert.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[999]';
+            customAlert.innerHTML = `
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-white">
+                    <h3 class="text-xl font-semibold mb-3">${title}</h3>
+                    <p>${message}</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700" onclick="this.closest('.fixed').remove()">OK</button>
+                </div>
+            `;
+            document.body.appendChild(customAlert);
+        }
+
+
+        // --- Event Listener for initial setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // In a real Django application, you would fetch data here:
+            /*
+            fetch('/api/fire_incidents/') // Replace with your actual Django API endpoint
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Assuming 'data' is an array of incident objects similar to 'fireIncidents'
+                    // IMPORTANT: Ensure your backend provides 'dayOfWeek', 'timeOfDay', 'season'
+                    // or implement the helper functions (getDayOfWeekAbbr, getTimeOfDayBlock, getSeason)
+                    // on the frontend to derive them from 'dateTime' as done in this example.
+                    const processedData = data.map(incident => ({
+                        ...incident,
+                        dayOfWeek: getDayOfWeekAbbr(incident.dateTime),
+                        timeOfDay: getTimeOfDayBlock(incident.dateTime),
+                        season: getSeason(incident.dateTime)
+                    }));
+                    updateDashboard(processedData); // Update the dashboard with fetched and processed data
+                })
+                .catch(error => {
+                    console.error('Error fetching fire incidents data:', error);
+                    showCustomAlert('Failed to load fire incident data. Please try again later.', 'Data Load Error');
+                    // Optionally, update dashboard with empty data or a fallback
+                    updateDashboard([]);
+                });
+            */
+            // For now, using the hardcoded `fireIncidents` array:
+            updateDashboard(fireIncidents); // Initial render of the dashboard with all data
+
+            // Attach event listeners for Data Export buttons
+            document.getElementById('exportCsvBtn').addEventListener('click', exportDataToCSV);
+            document.getElementById('exportPngBtn').addEventListener('click', exportChartsToPNG);
+            document.getElementById('customReportBtn').addEventListener('click', generateCustomReport); // Now opens the modal
+
+            // Attach event listener for the custom report generation form submission
+            document.getElementById('reportGenerationForm').addEventListener('submit', processReportGeneration);
+
+
+            // Re-render charts on window resize to maintain sharpness and responsiveness
+            window.addEventListener('resize', () => updateDashboard(fireIncidents)); // Re-render with all data on resize
+        });
+    </script>
+</body>
+</html>

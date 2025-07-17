@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Report Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Base styles for the body, setting font, background, and text color */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #220000; /* Deep, dark red background from screenshot */
+            color: #e2e8f0; /* Light text color */
+            padding: 2rem;
+        }
+        /* Custom scrollbar styling for a themed look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #330000; /* Darker red for scrollbar track from screenshot */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #440000; /* Medium red for scrollbar thumb from screenshot */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #660000; /* Lighter red on hover */
+        }
+        /* General modal overlay styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black overlay */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200; /* Ensure modal is on top of other content */
+        }
+        /* Modal content specific styling */
+        .modal-content {
+            background-color: #330000; /* Dark red background for modal content from screenshot */
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto; /* Enable scrolling for modal content if it overflows */
+            position: relative;
+        }
+        /* Close button for modals */
+        .modal-close-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            color: #e2e8f0; /* Light color for close button */
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-4xl font-bold text-white mb-6 text-center">Fire Report Management Dashboard</h1>
+
+        <!-- Action Buttons: Add New Report and View All Incidents -->
+        <div class="flex justify-end mb-6 space-x-4">
+            <button id="addNewReportButton" class="px-6 py-3 bg-red-700 text-white rounded-lg hover:bg-red-800 shadow-lg flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Add New Fire Report
+            </button>
+            <button id="viewAllIncidentsBtn" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-lg flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-checks"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M11 12h9"/><path d="M11 18h9"/><path d="M11 6h9"/></svg>
+                View All Incidents
+            </button>
+        </div>
+
+        <!-- Statistics Cards Section -->
+        <!-- In a Django context, these values would be populated by Django template variables,
+             e.g., <p id="totalFireReports">{{ total_reports }}</p> -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            <div class="bg-red-950 rounded-lg p-6 shadow-md flex flex-col items-start">
+                <p class="text-sm font-medium text-red-200">Total Fire Reports</p>
+                <p class="text-4xl font-bold text-white mt-2" id="totalFireReports">0</p>
+                <div class="flex items-center text-red-300 text-sm mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    <span>+9% from last month</span>
+                </div>
+            </div>
+
+            <div class="bg-red-950 rounded-lg p-6 shadow-md flex flex-col items-start">
+                <p class="text-sm font-medium text-red-200">Resolved Fire Reports</p>
+                <p class="text-4xl font-bold text-white mt-2" id="resolvedFireReports">0</p>
+                <div class="flex items-center text-red-300 text-sm mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    <span>+7% from last month</span>
+                </div>
+            </div>
+
+            <div class="bg-red-950 rounded-lg p-6 shadow-md flex flex-col items-start">
+                <p class="text-sm font-medium text-red-200">Pending Fire Reports</p>
+                <p class="text-4xl font-bold text-white mt-2" id="pendingFireReports">0</p>
+                <div class="flex items-center text-red-300 text-sm mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                    <span>-3% from last month</span>
+                </div>
+            </div>
+
+            <div class="bg-red-950 rounded-lg p-6 shadow-md flex flex-col items-start">
+                <p class="text-sm font-medium text-red-200">New Reports Today</p>
+                <p class="text-4xl font-bold text-white mt-2" id="newReportsToday">0</p>
+                <div class="flex items-center text-red-300 text-sm mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    <span>+1 today</span>
+                </div>
+            </div>
+
+            <div class="bg-red-950 rounded-lg p-6 shadow-md flex flex-col items-start">
+                <p class="text-sm font-medium text-red-200">Electrical Faults</p>
+                <p class="text-4xl font-bold text-white mt-2" id="electricalFaultsCount">0</p>
+                <div class="flex items-center text-red-300 text-sm mt-2">
+                    <span>Leading Cause</span>
+                </div>
+            </div>
+
+            <div class="bg-red-950 rounded-lg p-6 shadow-md flex flex-col items-start">
+                <p class="text-sm font-medium text-red-200">Estimated Damage</p>
+                <p class="text-4xl font-bold text-white mt-2" id="estimatedDamage">$0</p>
+                <div class="flex items-center text-red-300 text-sm mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                    <span>+15% from last year</span>
+                </div>
+            </div>
+
+            <div class="bg-red-950 rounded-lg p-6 shadow-md flex flex-col items-start">
+                <p class="text-sm font-medium text-red-200">High Severity Fires</p>
+                <p class="text-4xl font-bold text-white mt-2" id="highSeverityFires">0</p>
+                <div class="flex items-center text-red-300 text-sm mt-2">
+                    <span>Immediate Action</span>
+                </div>
+            </div>
+
+            <div class="bg-red-950 rounded-lg p-6 shadow-md flex flex-col items-start">
+                <p class="text-sm font-medium text-red-200">Avg. Response Time</p>
+                <p class="text-4xl font-bold text-white mt-2" id="avgResponseTimeDisplay">0 min</p>
+                <div class="flex items-center text-red-300 text-sm mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    <span>-3 min from last week</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-2 bg-red-950 rounded-lg p-6 shadow-md">
+                <h2 class="text-xl font-semibold text-white mb-4">Fire Reports Statistics</h2>
+                <p class="text-red-200 mb-4">Monthly breakdown of fire incidents.</p>
+                <div class="w-full h-80 bg-red-900 rounded-md flex items-center justify-center text-red-200 p-4">
+                    <canvas id="monthlyFireReportsChart"></canvas>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div class="w-full h-64 bg-red-900 rounded-md flex items-center justify-center text-red-200 p-4">
+                        <canvas id="fireCauseDistributionChart"></canvas>
+                    </div>
+                    <div class="w-full h-64 bg-red-900 rounded-md flex items-center justify-center text-red-200 p-4">
+                        <canvas id="fireSeverityBreakdownChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 bg-red-950 rounded-lg p-6 shadow-md">
+                <h2 class="text-xl font-semibold text-white mb-4">Incident Distribution by Property Type</h2>
+                <p class="text-red-200 mb-4">Breakdown of incidents by the type of property affected.</p>
+                <div class="w-full h-[400px] bg-red-900 rounded-md flex items-center justify-center text-red-200">
+                    <canvas id="propertyTypeDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Fire Reports Table Section -->
+        <div class="lg:col-span-3 bg-red-950 rounded-lg p-6 shadow-md overflow-x-auto">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+                <h2 class="text-xl font-semibold text-white">Recent Fire Reports</h2>
+                <div class="flex space-x-2 flex-wrap gap-2">
+                    <!-- For Django, this search input could trigger a form submission or an AJAX call to a Django view -->
+                    <input type="text" id="recentReportsSearchInput" placeholder="Search recent reports..." class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                    <!-- Select filters could be populated by Django template loops over choices from models -->
+                    <select class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" id="recentSeverityFilter">
+                        <option value="All">All Severities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                        <!-- Example Django loop: {% for severity in severities %}<option value="{{ severity }}">{{ severity }}</option>{% endfor %} -->
+                    </select>
+                    <select class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" id="recentStatusFilter">
+                        <option value="All">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Investigating">Investigating</option>
+                        <!-- Example Django loop: {% for status in statuses %}<option value="{{ status }}">{{ status }}</option>{% endfor %} -->
+                    </select>
+                </div>
+            </div>
+            <table class="min-w-full divide-y divide-red-700">
+                <thead class="bg-red-900">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider rounded-tl-lg">
+                            Report ID
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">
+                            Location
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">
+                            Date/Time
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">
+                            Cause
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">
+                            Severity
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider rounded-tr-lg">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-red-700" id="fireReportsTableBody">
+                    <!-- Report rows will be dynamically populated here by JavaScript
+                         In a Django template, you might pre-populate a few rows like:
+                         {% for report in recent_reports %}
+                         <tr>
+                             <td>{{ report.id }}</td>
+                             <td>{{ report.location }}</td>
+                             ...
+                         </tr>
+                         {% endfor %}
+                    -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Report Details Modal (for viewing/editing existing reports) -->
+    <div id="reportDetailsModal" class="modal hidden">
+        <div class="modal-content w-full md:w-3/4 lg:w-1/2">
+            <button class="modal-close-button" onclick="document.getElementById('reportDetailsModal').classList.add('hidden');">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 class="text-2xl font-bold text-white mb-4">Report Details: <span id="modalReportIdDisplay"></span></h2>
+            <!-- This form would submit to a Django view for updating a report -->
+            <form id="editReportForm" class="space-y-4">
+                <!-- Hidden input for Django to identify which report to update -->
+                <input type="hidden" id="editReportId" name="report_id">
+                <div>
+                    <label for="editLocation" class="block text-red-200 text-sm font-bold mb-2">Location:</label>
+                    <input type="text" id="editLocation" name="location" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="editDateTime" class="block text-red-200 text-sm font-bold mb-2">Date/Time:</label>
+                    <input type="datetime-local" id="editDateTime" name="date_time" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="editCause" class="block text-red-200 text-sm font-bold mb-2">Cause:</label>
+                    <select id="editCause" name="cause" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Select Cause</option>
+                        <option value="Electrical Fault">Electrical Fault</option>
+                        <option value="Arson">Arson</option>
+                        <option value="Cooking Accident">Cooking Accident</option>
+                        <option value="Flammable Materials">Flammable Materials</option>
+                        <option value="Bush Burning">Bush Burning</option>
+                        <option value="Others">Others</option>
+                        <!-- Django example: {% for choice in cause_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="editSeverity" class="block text-red-200 text-sm font-bold mb-2">Severity:</label>
+                    <select id="editSeverity" name="severity" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Select Severity</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                        <!-- Django example: {% for choice in severity_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="editStatus" class="block text-red-200 text-sm font-bold mb-2">Status:</label>
+                    <select id="editStatus" name="status" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Select Status</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Investigating">Investigating</option>
+                        <!-- Django example: {% for choice in status_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="editDamageEstimate" class="block text-red-200 text-sm font-bold mb-2">Damage Estimate ($):</label>
+                    <input type="number" id="editDamageEstimate" name="damage_estimate" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" min="0">
+                </div>
+                <div>
+                    <label for="editFatalities" class="block text-red-200 text-sm font-bold mb-2">Fatalities:</label>
+                    <input type="number" id="editFatalities" name="fatalities" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" min="0">
+                </div>
+                <div>
+                    <label for="editInjuries" class="block text-red-200 text-sm font-bold mb-2">Injuries:</label>
+                    <input type="number" id="editInjuries" name="injuries" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" min="0">
+                </div>
+                <div>
+                    <label for="editResponseTime" class="block text-red-200 text-sm font-bold mb-2">Response Time (min):</label>
+                    <input type="number" id="editResponseTime" name="response_time" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" min="0">
+                </div>
+                <div>
+                    <label for="editPropertyType" class="block text-red-200 text-sm font-bold mb-2">Property Type:</label>
+                    <select id="editPropertyType" name="property_type" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Select Property Type</option>
+                        <option value="Residential">Residential</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Market">Market</option>
+                        <option value="Bushland">Bushland</option>
+                        <option value="Industrial">Industrial</option>
+                        <option value="Vehicle">Vehicle</option>
+                        <option value="Construction">Construction</option>
+                        <option value="Other">Other</option>
+                        <!-- Django example: {% for choice in property_type_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div class="mt-6">
+                    <label for="editDescription" class="block text-red-200 text-sm font-bold mb-2">Description:</label>
+                    <textarea id="editDescription" name="description" class="w-full p-2 rounded-md bg-red-800 text-red-100 border border-red-700 mt-2 h-24"></textarea>
+                </div>
+                <div class="mt-6">
+                    <p class="font-semibold text-red-200">Attached Media:</p>
+                    <div id="editMedia" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
+                        <!-- Media images would be displayed here. For Django, you might iterate through a list of image URLs:
+                             {% for media_url in report.media_urls %}<img src="{{ media_url }}" alt="Incident Media">{% endfor %} -->
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <p class="font-semibold text-red-200">Chatbot Conversation Log:</p>
+                    <div id="editChatbotLog" class="bg-red-800 p-4 rounded-md mt-2 max-h-48 overflow-y-auto text-sm">
+                        <!-- Chatbot log content. In Django, this might be a text field or a related model's content. -->
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <p class="font-semibold text-red-200">Admin Action History:</p>
+                    <div id="editAdminLog" class="bg-red-800 p-4 rounded-md mt-2 max-h-32 overflow-y-auto text-sm">
+                        <!-- Admin log content. Could be a JSONField or related log entries in Django. -->
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <label for="editInternalNotes" class="block text-red-200 text-sm font-bold mb-2">Internal Notes:</label>
+                    <textarea id="editInternalNotes" name="internal_notes" class="w-full p-2 rounded-md bg-red-800 text-red-100 border border-red-700 mt-2 h-24"></textarea>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700" onclick="document.getElementById('reportDetailsModal').classList.add('hidden');">Cancel</button>
+                    <!-- This button would trigger an AJAX POST request to a Django view to save changes -->
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Save Changes</button>
+                    <button type="button" class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700" id="flagAsDuplicateBtn">Flag as Duplicate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Report Modal (for adding new reports) -->
+    <div id="addEditReportModal" class="modal hidden">
+        <div class="modal-content w-full md:w-2/3 lg:w-1/2">
+            <button class="modal-close-button" onclick="document.getElementById('addEditReportModal').classList.add('hidden');">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 class="text-2xl font-bold text-white mb-4">Add New Fire Report</h2>
+            <!-- This form would submit to a Django view, potentially using Django's CSRF token -->
+            <form id="fireReportForm" class="space-y-4">
+                <!-- {% csrf_token %} - Add Django's CSRF token here for form submissions -->
+                <div>
+                    <label for="reportIdInput" class="block text-red-200 text-sm font-bold mb-2">Report ID:</label>
+                    <!-- Report ID could be auto-generated by Django on save or by JS for display -->
+                    <input type="text" id="reportIdInput" name="report_id" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" readonly>
+                </div>
+                <div>
+                    <label for="locationInput" class="block text-red-200 text-sm font-bold mb-2">Location:</label>
+                    <input type="text" id="locationInput" name="location" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., Downtown Lagos" required>
+                </div>
+                <div>
+                    <label for="dateTimeInput" class="block text-red-200 text-sm font-bold mb-2">Date/Time:</label>
+                    <input type="datetime-local" id="dateTimeInput" name="date_time" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="causeInput" class="block text-red-200 text-sm font-bold mb-2">Cause:</label>
+                    <select id="causeInput" name="cause" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Select Cause</option>
+                        <option value="Electrical Fault">Electrical Fault</option>
+                        <option value="Arson">Arson</option>
+                        <option value="Cooking Accident">Cooking Accident</option>
+                        <option value="Flammable Materials">Flammable Materials</option>
+                        <option value="Bush Burning">Bush Burning</option>
+                        <option value="Others">Others</option>
+                        <!-- Django example: {% for choice in cause_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="severityInput" class="block text-red-200 text-sm font-bold mb-2">Severity:</label>
+                    <select id="severityInput" name="severity" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Select Severity</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                        <!-- Django example: {% for choice in severity_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="statusInput" class="block text-red-200 text-sm font-bold mb-2">Status:</label>
+                    <select id="statusInput" name="status" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Select Status</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Investigating">Investigating</option>
+                        <!-- Django example: {% for choice in status_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="damageEstimateInput" class="block text-red-200 text-sm font-bold mb-2">Damage Estimate ($):</label>
+                    <input type="number" id="damageEstimateInput" name="damage_estimate" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., 50000" min="0">
+                </div>
+                <div>
+                    <label for="fatalitiesInput" class="block text-red-200 text-sm font-bold mb-2">Fatalities:</label>
+                    <input type="number" id="fatalitiesInput" name="fatalities" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., 0" min="0">
+                </div>
+                <div>
+                    <label for="injuriesInput" class="block text-red-200 text-sm font-bold mb-2">Injuries:</label>
+                    <input type="number" id="injuriesInput" name="injuries" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., 1" min="0">
+                </div>
+                <div>
+                    <label for="responseTimeInput" class="block text-red-200 text-sm font-bold mb-2">Response Time (min):</label>
+                    <input type="number" id="responseTimeInput" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., 15" min="0">
+                </div>
+                <div>
+                    <label for="propertyTypeInput" class="block text-red-200 text-sm font-bold mb-2">Property Type:</label>
+                    <select id="propertyTypeInput" name="property_type" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Select Property Type</option>
+                        <option value="Residential">Residential</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Market">Market</option>
+                        <option value="Bushland">Bushland</option>
+                        <option value="Industrial">Industrial</option>
+                        <option value="Vehicle">Vehicle</option>
+                        <option value="Construction">Construction</option>
+                        <option value="Other">Other</option>
+                        <!-- Django example: {% for choice in property_type_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="mediaUpload" class="block text-red-200 text-sm font-bold mb-2">Upload Media (Images):</label>
+                    <!-- For Django, this input would typically be part of a form that handles file uploads.
+                         The `name="media"` attribute would be used to access the uploaded files in Django's request.FILES. -->
+                    <input type="file" id="mediaUpload" name="media" class="block w-full text-sm text-red-100
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-red-500 file:text-white
+                        hover:file:bg-red-600"
+                        accept="image/*" multiple>
+                    <div id="mediaPreview" class="mt-2 grid grid-cols-3 gap-2">
+                        <!-- Media previews will be shown here (client-client) -->
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700" onclick="document.getElementById('addEditReportModal').classList.add('hidden');">Cancel</button>
+                    <!-- This button would trigger an AJAX POST request to a Django view to save the new report -->
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Save Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Report Generation Modal -->
+    <div id="customReportModal" class="modal hidden">
+        <div class="modal-content w-full md:w-2/3 lg:w-1/2">
+            <button class="modal-close-button" onclick="document.getElementById('customReportModal').classList.add('hidden');">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 class="text-2xl font-bold text-white mb-4">Generate Custom Report</h2>
+            <!-- This form would trigger an AJAX request to a Django view that generates the report data -->
+            <form id="reportGenerationForm" class="space-y-4">
+                <div>
+                    <label for="reportStartDate" class="block text-red-200 text-sm font-bold mb-2">Start Date:</label>
+                    <input type="date" id="reportStartDate" name="start_date" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div>
+                    <label for="reportEndDate" class="block text-red-200 text-sm font-bold mb-2">End Date:</label>
+                    <input type="date" id="reportEndDate" name="end_date" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div>
+                    <label for="reportSeverityFilter" class="block text-red-200 text-sm font-bold mb-2">Severity:</label>
+                    <select id="reportSeverityFilter" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="all">All Severities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                        <!-- Django example: {% for choice in severity_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="reportLocationFilter" class="block text-red-200 text-sm font-bold mb-2">Location:</label>
+                    <select id="reportLocationFilter" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="all">All Locations</option>
+                        <!-- Locations will be dynamically populated here by JS, or could be pre-populated by Django:
+                             {% for location in unique_locations %}<option value="{{ location }}">{{ location }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="reportPropertyTypeFilter" class="block text-red-200 text-sm font-bold mb-2">Property Type:</label>
+                    <select id="reportPropertyTypeFilter" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="all">All Property Types</option>
+                        <!-- Property Types will be dynamically populated here by JS, or could be pre-populated by Django -->
+                    </select>
+                </div>
+                <div>
+                    <label for="reportFormat" class="block text-red-200 text-sm font-bold mb-2">Output Format:</label>
+                    <select id="reportFormat" name="format" class="shadow appearance-none border rounded w-full py-2 px-3 bg-red-800 text-red-100 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="csv">CSV (Comma Separated Values)</option>
+                        <option value="pdf_summary">PDF Summary (Text-based)</option>
+                        <!-- If Django were generating actual PDFs, this option would trigger a different view -->
+                    </select>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700" onclick="document.getElementById('customReportModal').classList.add('hidden');">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Generate Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- All Incidents Modal (for viewing all reports with advanced filters) -->
+    <div id="allIncidentsModal" class="modal hidden">
+        <div class="modal-content w-11/12 max-w-6xl">
+            <button class="modal-close-button" onclick="document.getElementById('allIncidentsModal').classList.add('hidden');">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 class="text-2xl font-bold text-white mb-4">All Fire Incidents</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label for="allIncidentsSearch" class="block text-red-200 text-sm font-bold mb-2">Search:</label>
+                    <input type="text" id="allIncidentsSearch" placeholder="Search ID, location, cause..." class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                </div>
+                <div>
+                    <label for="allIncidentsSeverityFilter" class="block text-red-200 text-sm font-bold mb-2">Severity:</label>
+                    <select id="allIncidentsSeverityFilter" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="All">All Severities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                        <!-- Django example: {% for choice in severity_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="allIncidentsStatusFilter" class="block text-red-200 text-sm font-bold mb-2">Status:</label>
+                    <select id="allIncidentsStatusFilter" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="All">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Investigating">Investigating</option>
+                        <!-- Django example: {% for choice in status_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="allIncidentsCauseFilter" class="block text-red-200 text-sm font-bold mb-2">Cause:</label>
+                    <select id="allIncidentsCauseFilter" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="All">All Causes</option>
+                        <option value="Electrical Fault">Electrical Fault</option>
+                        <option value="Arson">Arson</option>
+                        <option value="Cooking Accident">Cooking Accident</option>
+                        <option value="Flammable Materials">Flammable Materials</option>
+                        <option value="Bush Burning">Bush Burning</option>
+                        <option value="Others">Others</option>
+                        <!-- Django example: {% for choice in cause_choices %}<option value="{{ choice.0 }}">{{ choice.1 }}</option>{% endfor %} -->
+                    </select>
+                </div>
+                <div>
+                    <label for="allIncidentsLocationFilter" class="block text-red-200 text-sm font-bold mb-2">Location:</label>
+                    <select id="allIncidentsLocationFilter" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="All">All Locations</option>
+                        <!-- Locations will be dynamically populated here by JS, or could be pre-populated by Django -->
+                    </select>
+                </div>
+                <div>
+                    <label for="allIncidentsPropertyTypeFilter" class="block text-red-200 text-sm font-bold mb-2">Property Type:</label>
+                    <select id="allIncidentsPropertyTypeFilter" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="All">All Property Types</option>
+                        <!-- Property Types will be dynamically populated here by JS, or could be pre-populated by Django -->
+                    </select>
+                </div>
+                <div>
+                    <label for="allIncidentsStartDate" class="block text-red-200 text-sm font-bold mb-2">Start Date:</label>
+                    <input type="date" id="allIncidentsStartDate" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                </div>
+                <div>
+                    <label for="allIncidentsEndDate" class="block text-red-200 text-sm font-bold mb-2">End Date:</label>
+                    <input type="date" id="allIncidentsEndDate" class="p-2 rounded-md bg-red-800 text-red-100 border border-red-700 w-full focus:outline-none focus:ring-2 focus:ring-red-500">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-red-700">
+                    <thead class="bg-red-900">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider rounded-tl-lg">Report ID</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">Location</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">Date/Time</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">Cause</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">Severity</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">Property Type</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-red-200 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-red-700" id="allIncidentsTableBody">
+                        <!-- All incident rows will be dynamically populated here by JavaScript.
+                             For Django, this could be an initial render of filtered data, followed by AJAX updates. -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Sample data for reports (in a real Django app, this would be fetched from a Django REST API endpoint,
+        // e.g., using `fetch('/api/fire_reports/')` in `DOMContentLoaded`).
+        let sampleReports = [
+            { id: 'FR-001', location: 'Downtown, Lagos', dateTime: '2025-05-29T14:30', cause: 'Electrical Fault', severity: 'High', status: 'Resolved', media: ['https://placehold.co/150x100/374151/E5E7EB?text=Image+1', 'https://placehold.co/150x100/374151/E5E7EB?text=Image+2'], description: 'Large fire reported in a commercial building. Electrical fault suspected. Fire services dispatched quickly.', chatbotLog: 'User: There\'s a fire at Yola Market!\nChatbot: Thank you for reporting. Can you confirm the exact address or a nearby landmark?\nUser: Near the main entrance, opposite the large mosque.\nChatbot: Understood. Fire services have been alerted. Please ensure your safety and evacuate the area if possible. Do not attempt to extinguish the fire yourself unless it\'s very small and safe to do so.', adminLog: 'Admin User: Report Acknowledged (2025-05-29 14:35)\nAdmin User: Dispatched Fire Service (2025-05-29 14:40)', damageEstimate: 50000, fatalities: 0, injuries: 1, responseTime: 10, internalNotes: 'Initial assessment: High risk due to proximity to residential area.', propertyType: 'Commercial' },
+            { id: 'FR-002', location: 'Residential, Abuja', dateTime: '2025-06-10T08:00', cause: 'Cooking Accident', severity: 'Medium', status: 'Pending', media: [], description: 'Small kitchen fire, quickly contained by resident. Minor smoke damage.', chatbotLog: 'User: Fire in my kitchen!\nChatbot: Is anyone hurt? What is the extent of the fire?\nUser: No, just a pan fire, put it out. Lots of smoke.\nChatbot: Understood. Fire services will still be dispatched to ensure safety.', adminLog: 'Admin User: Report Received (2025-06-10 08:05)', damageEstimate: 1500, fatalities: 0, injuries: 0, responseTime: 8, internalNotes: 'Follow up with fire safety tips.' , propertyType: 'Residential'},
+            { id: 'FR-003', location: 'Industrial Zone, Kano', dateTime: '2025-06-05T22:15', cause: 'Flammable Materials', severity: 'High', status: 'Investigating', media: ['https://placehold.co/150x100/374151/E5E7EB?text=Factory+Fire'], description: 'Large fire at a chemical factory. Hazardous materials involved. Area evacuated.', chatbotLog: 'User: Huge fire at the factory! Explosions!\nChatbot: Please confirm location and stay clear. Emergency services are being alerted.\nUser: [Location details]. It\'s bad.\nChatbot: We are dispatching all available units.', adminLog: 'Admin User: Major Incident Declared (2025-06-05 22:20)\nAdmin User: Hazmat team dispatched (2025-06-05 22:30)', damageEstimate: 1000000, fatalities: 3, injuries: 10, responseTime: 20, internalNotes: 'Ongoing investigation with environmental agencies.' , propertyType: 'Industrial'},
+            { id: 'FR-004', location: 'Bushland, Enugu', dateTime: '2025-06-01T11:00', cause: 'Bush Burning', severity: 'Low', status: 'Resolved', media: [], description: 'Controlled bush burning got out of hand. No structures threatened. Contained by local farmers and fire service.', chatbotLog: 'User: Bush fire spreading!\nChatbot: Is it near any residential areas or farms?\nUser: No, just open land, but getting bigger.\nChatbot: Local units are being informed.', adminLog: 'Admin User: Report Acknowledged (2025-06-01 11:05)\nAdmin User: Contained by local efforts (2025-06-01 12:30)', damageEstimate: 500, fatalities: 0, injuries: 0, responseTime: 60, internalNotes: 'Educate community on safe burning practices.' , propertyType: 'Bushland'},
+            { id: 'FR-005', location: 'Commercial Street, Port Harcourt', dateTime: '2025-05-20T09:45', cause: 'Arson', severity: 'Medium', status: 'Pending', media: ['https://placehold.co/150x100/374151/E5E7EB?text=Shop+Fire'], description: 'Small shop fire, suspected arson. Police investigation initiated.', chatbotLog: 'User: Fire in a shop on Main Street.\nChatbot: Is anyone inside? What kind of shop is it?\nUser: Clothes shop, no one inside now. Smoke everywhere.\nChatbot: Police and fire services are on their way.', adminLog: 'Admin User: Report Received (2025-05-20 09:50)\nAdmin User: Police notified for arson investigation (2025-05-20 10:10)', damageEstimate: 25000, fatalities: 0, injuries: 0, responseTime: 15, internalNotes: 'Follow up with police department.' , propertyType: 'Commercial'},
+            { id: 'FR-006', location: 'Market Area, Ibadan', dateTime: '2025-05-28T10:15', cause: 'Arson', severity: 'High', status: 'Pending', media: ['https://placehold.co/150x100/374151/E5E7EB?text=Market+Fire'], description: 'Multiple stalls on fire in the main market. Suspected arson. Police and fire services en route.', chatbotLog: 'User: Market is on fire!\nChatbot: Can you provide more details about the location within the market?\nUser: Near the textile section, spreading fast.\nChatbot: Emergency services are on their way. Please stay clear of the area.', adminLog: 'Admin User: Report Acknowledged (2025-05-28 10:20)', damageEstimate: 150000, fatalities: 2, injuries: 5, responseTime: 12, internalNotes: 'Requires follow-up by police investigation team.', propertyType: 'Market' },
+            { id: 'FR-007', location: 'Residential, Enugu', dateTime: '2025-05-27T20:00', cause: 'Cooking Accident', severity: 'Medium', status: 'Resolved', media: [], description: 'Kitchen fire in a residential apartment. Contained by residents before fire service arrival. Minor damage.', chatbotLog: 'User: My kitchen is on fire!\nChatbot: Are there any injuries? Is everyone safely evacuated?\nUser: No injuries, fire is small, we put it out. Lots of smoke.\nChatbot: Great! Fire services will still come to ensure it\'s completely safe.', adminLog: 'Admin User: Report Acknowledged (2025-05-27 20:05)\nAdmin User: Fire Service confirmed contained (2025-05-27 20:30)', damageEstimate: 5000, fatalities: 0, injuries: 0, responseTime: 25, internalNotes: 'Remind residents about fire extinguisher use.', propertyType: 'Residential' },
+            { id: 'FR-008', location: 'Rural Farm, Kano', dateTime: '2025-05-26T08:45', cause: 'Bush Burning', severity: 'Medium', status: 'Investigating', media: [], description: 'Bush fire spreading near a farm. No immediate threat to structures but needs monitoring.', chatbotLog: 'User: Bush fire near my farm!\nChatbot: Is it close to any homes or buildings? What is the wind direction?\nUser: Not yet, wind blowing away from homes. Just need it controlled.\nChatbot: Understood. Local fire units are being notified.', adminLog: 'Admin User: Report Acknowledged (2025-05-26 08:50)', damageEstimate: 1000, fatalities: 0, injuries: 0, responseTime: 45, internalNotes: 'Monitor wind changes and potential spread to crops.', propertyType: 'Bushland' },
+            { id: 'FR-009', location: 'Commercial, Port Harcourt', dateTime: '2025-05-25T16:00', cause: 'Flammable Materials', severity: 'High', status: 'Resolved', media: ['https://placehold.co/150x100/374151/E5E7EB?text=Warehouse+Fire'], description: 'Fire in a warehouse storing flammable materials. Quickly brought under control by fire brigade.', chatbotLog: 'User: Warehouse on fire, lots of smoke!\nChatbot: Is anyone trapped inside? Are there any explosions?\nUser: No one trapped, just smoke. Fire brigade is here.\nChatbot: Excellent. Please remain at a safe distance.', adminLog: 'Admin User: Report Acknowledged (2025-05-25 16:05)\nAdmin User: Fire under control (2025-05-25 16:45)', damageEstimate: 75000, fatalities: 0, injuries: 1, responseTime: 15, internalNotes: 'Review safety protocols for hazardous material storage.', propertyType: 'Industrial' },
+            { id: 'FR-010', location: 'Vehicle Workshop, Kaduna', dateTime: '2025-06-12T13:00', cause: 'Fuel Spill', severity: 'Medium', status: 'Resolved', media: [], description: 'Small fire caused by accidental fuel spill during vehicle repair. Quickly extinguished.', chatbotLog: 'User: Fire at the workshop, fuel spill!\nChatbot: Is it contained? Any injuries?\nUser: Yes, contained. No injuries.\nChatbot: Good. Fire services will confirm safety.', adminLog: 'Admin User: Report Acknowledged (2025-06-12 13:05)', damageEstimate: 3000, fatalities: 0, injuries: 0, responseTime: 7, internalNotes: 'Remind workshops about safety protocols.' , propertyType: 'Vehicle'},
+            { id: 'FR-011', location: 'Construction Site, Abuja', dateTime: '2025-06-11T16:45', cause: 'Electrical Fault', severity: 'Low', status: 'Resolved', media: [], description: 'Minor electrical fire in temporary wiring. Quickly isolated and extinguished by site workers.', chatbotLog: 'User: Small fire at construction site.\nChatbot: Is it contained? Any injuries?\nUser: Contained, no injuries.\nChatbot: Fire services will verify.', adminLog: 'Admin User: Report Acknowledged (2025-06-11 16:50)', damageEstimate: 800, fatalities: 0, injuries: 0, responseTime: 10, internalNotes: 'Site inspection recommended.' , propertyType: 'Construction'},
+            { id: 'FR-012', location: 'Residential, Calabar', dateTime: '2025-06-08T03:00', cause: 'Candle Left Unattended', severity: 'Medium', status: 'Pending', media: [], description: 'Bedroom fire due to unattended candle. Resident evacuated safely. Moderate damage.', chatbotLog: 'User: House on fire! Bedroom!\nChatbot: Is everyone out safely? What caused it?\nUser: Yes, out. Candle fell over.\nChatbot: Fire services are coming.', adminLog: 'Admin User: Report Received (2025-06-08 03:05)', damageEstimate: 12000, fatalities: 0, injuries: 1, responseTime: 18, internalNotes: 'Support for displaced family.' , propertyType: 'Residential'},
+            { id: 'FR-013', location: 'Market Area, Kano', dateTime: '2025-06-07T12:30', cause: 'Cooking Accident', severity: 'Low', status: 'Resolved', media: [], description: 'Small fire at a food stall due to cooking oil. Quickly put out by vendors.', chatbotLog: 'User: Food stall fire!\nChatbot: Is it contained? Any injuries?\nUser: Yes, contained. No injuries.\nChatbot: Fire services will check.', adminLog: 'Admin User: Report Acknowledged (2025-06-07 12:35)', damageEstimate: 700, fatalities: 0, injuries: 0, responseTime: 5, internalNotes: 'Regular market safety checks needed.' , propertyType: 'Market'},
+            { id: 'FR-014', location: 'Rural Village, Plateau', dateTime: '2025-06-06T18:00', cause: 'Bush Burning', severity: 'High', status: 'Investigating', media: [], description: 'Large bush fire threatening a rural village. High winds spreading quickly.', chatbotLog: 'User: Village is threatened by bush fire!\nChatbot: Are residents evacuating? What direction is the wind?\nUser: Yes, evacuating. Wind towards us.\nChatbot: All available resources are being sent.', adminLog: 'Admin User: Emergency declared (2025-06-06 18:10)\nAdmin User: Reinforcements requested (2025-06-06 18:30)', damageEstimate: 50000, fatalities: 0, injuries: 2, responseTime: 90, internalNotes: 'Long-term prevention strategies needed.' , propertyType: 'Bushland'},
+            { id: 'FR-015', location: 'Office Building, Lagos', dateTime: '2025-06-04T17:00', cause: 'Electrical Fault', severity: 'Medium', status: 'Resolved', media: [], description: 'Electrical fire in server room. Contained by building\'s suppression system. Minor disruption.', chatbotLog: 'User: Fire alarm at my office building, smoke in server room!\nChatbot: Is the fire contained? Are you safe?\nUser: Yes, sprinklers activated. We evacuated.\nChatbot: Fire services are en route.', adminLog: 'Admin User: Report Acknowledged (2025-06-04 17:05)\nAdmin User: Building cleared (2025-06-04 17:45)', damageEstimate: 10000, fatalities: 0, injuries: 0, responseTime: 12, internalNotes: 'Check electrical systems regularly.' , propertyType: 'Commercial'},
+            { id: 'FR-016', location: 'Residential, Maiduguri', dateTime: '2025-05-15T01:00', cause: 'Cooking Accident', severity: 'Low', status: 'Resolved', media: [], description: 'Late night cooking fire, quickly put out by resident. No major damage.', chatbotLog: 'User: Fire in my apartment!\nChatbot: Are you safe? Can you describe the fire?\nUser: Yes, safe. Small pan fire, put it out.\nChatbot: Fire services will verify.', adminLog: 'Admin User: Report Acknowledged (2025-05-15 01:05)', damageEstimate: 500, fatalities: 0, injuries: 0, responseTime: 6, internalNotes: 'Remind about night safety.' , propertyType: 'Residential'},
+            { id: 'FR-017', location: 'Rural Area, Adamawa', dateTime: '2025-05-18T14:00', cause: 'Bush Burning', severity: 'Medium', status: 'Pending', media: [], description: 'Bush fire near a cluster of huts. Local community assisting with containment.', chatbotLog: 'User: Bush fire near our village!\nChatbot: Is it threatening homes? What resources are available locally?\nUser: Yes, close to some huts. We are trying to stop it.\nChatbot: Fire services are on their way to assist.', adminLog: 'Admin User: Report Acknowledged (2025-05-18 14:05)', damageEstimate: 2000, fatalities: 0, injuries: 0, responseTime: 40, internalNotes: 'Coordination with local authorities needed.' , propertyType: 'Bushland'},
+            { id: 'FR-018', location: 'Market Area, Onitsha', dateTime: '2025-05-22T11:30', cause: 'Electrical Fault', severity: 'High', status: 'Investigating', media: [], description: 'Electrical fault caused fire in a busy market section. Rapid response needed.', chatbotLog: 'User: Fire in the market! Electrical sparks!\nChatbot: Which section of the market? Is it spreading?\nUser: Electronics section, spreading fast.\nChatbot: Emergency teams are being dispatched immediately.', adminLog: 'Admin User: High Priority Incident (2025-05-22 11:35)\nAdmin User: Power cut requested (2025-05-22 11:40)', damageEstimate: 80000, fatalities: 1, injuries: 3, responseTime: 10, internalNotes: 'Market electrical infrastructure audit required.' , propertyType: 'Market'},
+            { id: 'FR-019', location: 'Residential, Jos', dateTime: '2025-06-03T05:00', cause: 'Other', severity: 'Low', status: 'Resolved', media: [], description: 'Small fire from a faulty generator. Quickly put out by residents.', chatbotLog: 'User: Generator caught fire!\nChatbot: Is it contained? Any injuries?\nUser: Yes, put out. No injuries.\nChatbot: Fire services will confirm safety.', adminLog: 'Admin User: Report Acknowledged (2025-06-03 05:05)', damageEstimate: 1000, fatalities: 0, injuries: 0, responseTime: 15, internalNotes: 'Advise on generator maintenance.' , propertyType: 'Residential'},
+            { id: 'FR-020', location: 'Industrial Estate, Ogun', dateTime: '2025-06-09T10:00', cause: 'Flammable Materials', severity: 'High', status: 'Pending', media: [], description: 'Warehouse fire involving industrial solvents. Large scale operation underway.', chatbotLog: 'User: Huge fire at the industrial estate!\nChatbot: Which warehouse? Any specific materials involved?\nUser: Warehouse 7, solvents. Very dangerous.\nChatbot: All emergency protocols activated.', adminLog: 'Admin User: Major Incident (2025-06-09 10:05)\nAdmin User: Evacuation of adjacent buildings (2025-06-09 10:15)', damageEstimate: 750000, fatalities: 0, injuries: 5, responseTime: 25, internalNotes: 'Requires long-term monitoring for environmental impact.' , propertyType: 'Industrial'}
+        ];
+
+        // Global flag to prevent immediate closing of newly opened modals by the global click listener
+        let isModalOpening = false;
+
+        /**
+         * Creates and initializes a Chart.js chart on a given canvas element.
+         * This function handles canvas resizing for sharpness and destroys existing charts.
+         * @param {string} ctxId - The ID of the canvas element.
+         * @param {string} type - The type of chart (e.g., 'line', 'bar', 'pie').
+         * @param {Array<string>} labels - Labels for the chart's axes or segments.
+         * @param {Array<number>} data - Data values for the chart.
+         * @param {string} label - Label for the dataset.
+         * @param {string|Array<string>} backgroundColor - Background color(s) for chart elements.
+         * @param {string|Array<string>} borderColor - Border color(s) for chart elements.
+         */
+        function createChart(ctxId, type, labels, data, label, backgroundColor, borderColor) {
+            const canvas = document.getElementById(ctxId);
+            if (!canvas) {
+                console.error(`Canvas element with ID '${ctxId}' not found.`);
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+
+            // Get the actual display size of the canvas's parent container
+            const parent = canvas.parentElement;
+            const computedStyle = getComputedStyle(parent);
+            const displayWidth = parseFloat(computedStyle.width);
+            const displayHeight = parseFloat(computedStyle.height);
+
+            // Set the canvas element's width and height attributes to match its display size
+            // multiplied by the device pixel ratio for sharper rendering on high-DPI screens
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = displayWidth * dpr;
+            canvas.height = displayHeight * dpr;
+
+            // Ensure the canvas is styled to fit its container
+            canvas.style.width = `${displayWidth}px`;
+            canvas.style.height = `${displayHeight}px`;
+
+            // If a chart instance already exists on this canvas, destroy it to prevent duplicates
+            if (Chart.getChart(ctxId)) {
+                Chart.getChart(ctxId).destroy();
+            }
+
+            new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
+                        borderWidth: 1,
+                        fill: type === 'line' ? true : false, // Fill area under line for line charts
+                        tension: type === 'line' ? 0.4 : 0 // Smooth curves for line charts
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    devicePixelRatio: dpr, // Crucial for high-DPI screens
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e2e8f0' // Light color for legend text
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: '#440000' /* Red grid lines from screenshot */
+                            },
+                            ticks: {
+                                color: '#e2e8f0' // Light color for x-axis labels
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#440000' /* Red grid lines from screenshot */
+                            },
+                            ticks: {
+                                color: '#e2e8f0', // Light color for y-axis labels
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Renders the recent reports table with a subset of the sample data.
+         * @param {Array<Object>} reportsToDisplay - The array of report objects to render.
+         */
+        function renderReportsTable(reportsToDisplay = sampleReports.slice(0, 10)) {
+            const tableBody = document.getElementById('fireReportsTableBody');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            reportsToDisplay.forEach(report => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-red-900 transition duration-150 ease-in-out'; /* Hover effect - adjusted for new red */
+                // Determine severity and status badge colors
+                const severityClass = report.severity === 'High' ? 'bg-red-700' :
+                                      report.severity === 'Medium' ? 'bg-orange-600' : 'bg-green-600';
+                const statusClass = report.status === 'Resolved' ? 'bg-green-600' :
+                                    report.status === 'Pending' ? 'bg-orange-600' : 'bg-blue-600';
+
+                row.innerHTML = `
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-white">${report.id}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-red-100">${report.location}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-red-100">${report.dateTime}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-red-100">${report.cause}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${severityClass} text-white">
+                            ${report.severity}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} text-white">
+                            ${report.status}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                        <button class="text-red-400 hover:text-red-500 mr-2 view-details-btn" data-report-id="${report.id}">Details</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Re-attach event listeners for "Details" buttons after re-rendering
+            document.querySelectorAll('#fireReportsTableBody .view-details-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const reportId = event.target.dataset.reportId;
+                    console.log(`Details button clicked for Report ID: ${reportId}`); // Debugging log
+                    const report = sampleReports.find(r => r.id === reportId);
+                    if (report) {
+                        populateReportDetailsModal(report);
+                    } else {
+                        console.error(`Report with ID ${reportId} not found for details.`);
+                    }
+                });
+            });
+
+            // Removed the event listener for the "Resolve" button
+        }
+
+        /**
+         * Populates the Report Details Modal with data from a specific report object.
+         * @param {Object} report - The report object to display.
+         */
+        function populateReportDetailsModal(report) {
+            const reportDetailsModal = document.getElementById('reportDetailsModal');
+            document.getElementById('modalReportIdDisplay').textContent = report.id;
+            document.getElementById('editReportId').value = report.id; // Hidden ID for saving
+            document.getElementById('editLocation').value = report.location;
+            document.getElementById('editDateTime').value = report.dateTime;
+            document.getElementById('editCause').value = report.cause;
+            document.getElementById('editSeverity').value = report.severity;
+            document.getElementById('editStatus').value = report.status;
+            document.getElementById('editDamageEstimate').value = report.damageEstimate || '';
+            document.getElementById('editFatalities').value = report.fatalities || '';
+            document.getElementById('editInjuries').value = report.injuries || '';
+            document.getElementById('editResponseTime').value = report.responseTime || '';
+            document.getElementById('editPropertyType').value = report.propertyType || '';
+            document.getElementById('editDescription').value = report.description;
+            document.getElementById('editChatbotLog').textContent = report.chatbotLog;
+            document.getElementById('editAdminLog').textContent = report.adminLog;
+            document.getElementById('editInternalNotes').value = report.internalNotes || '';
+
+            const editMediaContainer = document.getElementById('editMedia');
+            editMediaContainer.innerHTML = ''; // Clear previous media
+            if (report.media && report.media.length > 0) {
+                report.media.forEach(mediaUrl => {
+                    const img = document.createElement('img');
+                    img.src = mediaUrl;
+                    img.alt = 'Incident Media';
+                    img.className = 'rounded-md w-full h-24 object-cover'; // Changed h-auto to h-24 for consistent size
+                    editMediaContainer.appendChild(img);
+                });
+            } else {
+                editMediaContainer.innerHTML = '<div class="w-full h-24 bg-red-900 rounded-md flex items-center justify-center text-red-200 text-sm p-4 border border-red-700">No media available</div>'; /* Adjusted for new red */
+            }
+
+            // Removed the call to setAccidentDetailsEditable(false);
+            reportDetailsModal.classList.remove('hidden'); // Show the modal
+
+            isModalOpening = true; // Set flag when opening
+            setTimeout(() => {
+                isModalOpening = false; // Reset flag after a short delay
+            }, 100);
+        }
+
+        /**
+         * Updates the summary statistics displayed on the dashboard based on the current reports data.
+         * @param {Array<Object>} reports - The array of report objects to use for calculations.
+         */
+        function updateSummaryStatistics(reports = sampleReports) {
+            document.getElementById('totalFireReports').textContent = reports.length;
+            document.getElementById('resolvedFireReports').textContent = reports.filter(r => r.status === 'Resolved').length;
+            document.getElementById('pendingFireReports').textContent = reports.filter(r => r.status === 'Pending' || r.status === 'Investigating').length;
+
+            const today = new Date().toISOString().slice(0, 10);
+            document.getElementById('newReportsToday').textContent = reports.filter(r => r.dateTime.startsWith(today)).length;
+
+            const electricalFaults = reports.filter(r => r.cause === 'Electrical Fault').length;
+            document.getElementById('electricalFaultsCount').textContent = electricalFaults;
+
+            const totalDamage = reports.reduce((sum, r) => sum + (r.damageEstimate || 0), 0);
+            document.getElementById('estimatedDamage').textContent = `$${totalDamage.toLocaleString()}`;
+
+            const highSeverity = reports.filter(r => r.severity === 'High').length;
+            document.getElementById('highSeverityFires').textContent = highSeverity;
+
+            const totalResponseTime = reports.reduce((sum, r) => sum + (r.responseTime || 0), 0);
+            const avgResponseTime = reports.length > 0 ? (totalResponseTime / reports.length).toFixed(1) : 0;
+            document.getElementById('avgResponseTimeDisplay').textContent = `${avgResponseTime} min`;
+        }
+
+        /**
+         * Initializes all Chart.js charts on the dashboard. This function is called on page load
+         * and on window resize to ensure charts are rendered sharply.
+         * @param {Array<Object>} reports - The array of report objects to use for chart data.
+         */
+        function initializeAllCharts(reports = sampleReports) {
+            // Data for Monthly Fire Reports Chart (Line Chart)
+            const monthlyReports = {};
+            reports.forEach(report => {
+                const monthYear = report.dateTime.substring(0, 7); // YYYY-MM
+                monthlyReports[monthYear] = (monthlyReports[monthYear] || 0) + 1;
+            });
+            const sortedMonths = Object.keys(monthlyReports).sort();
+            const monthlyReportsLabels = sortedMonths.map(my => {
+                const [year, month] = my.split('-');
+                return new Date(year, month - 1).toLocaleString('en-US', { month: 'short', year: '2-digit' });
+            });
+            const monthlyReportsData = sortedMonths.map(my => monthlyReports[my]);
+
+            createChart(
+                'monthlyFireReportsChart',
+                'line',
+                monthlyReportsLabels,
+                monthlyReportsData,
+                'Number of Fire Reports',
+                'rgba(255, 99, 71, 0.4)', /* Tomato red with transparency */
+                'rgba(255, 99, 71, 1)'   /* Solid Tomato red */
+            );
+
+            // Data for Fire Cause Distribution Chart (Pie Chart)
+            const fireCauseLabels = ['Electrical Fault', 'Arson', 'Cooking Accident', 'Bush Burning', 'Flammable Materials', 'Others'];
+            const causeCounts = {};
+            reports.forEach(report => {
+                const cause = fireCauseLabels.includes(report.cause) ? report.cause : 'Others';
+                causeCounts[cause] = (causeCounts[cause] || 0) + 1;
+            });
+            const fireCauseData = fireCauseLabels.map(cause => causeCounts[cause] || 0);
+
+            const fireCauseColors = [
+                'rgba(255, 69, 0, 0.8)',   /* OrangeRed */
+                'rgba(255, 140, 0, 0.8)',  /* DarkOrange */
+                'rgba(255, 165, 0, 0.8)',  /* Orange */
+                'rgba(255, 215, 0, 0.8)',  /* Gold */
+                'rgba(255, 255, 0, 0.8)',  /* Yellow */
+                'rgba(255, 0, 0, 0.8)'     /* Red */
+            ];
+            createChart(
+                'fireCauseDistributionChart',
+                'pie',
+                fireCauseLabels,
+                fireCauseData,
+                'Fire Causes',
+                fireCauseColors,
+                fireCauseColors // Border color same as background for pie
+            );
+
+            // Data for Fire Severity Breakdown Chart (Bar Chart)
+            const fireSeverityLabels = ['High', 'Medium', 'Low'];
+            const severityCounts = {};
+            reports.forEach(report => {
+                severityCounts[report.severity] = (severityCounts[report.severity] || 0) + 1;
+            });
+            const fireSeverityData = fireSeverityLabels.map(severity => severityCounts[severity] || 0);
+
+            const fireSeverityColors = [
+                'rgba(220, 20, 60, 0.8)',   /* Crimson for High */
+                'rgba(255, 165, 0, 0.8)',   /* Orange for Medium */
+                'rgba(50, 205, 50, 0.8)'    /* LimeGreen for Low */
+            ];
+            createChart(
+                'fireSeverityBreakdownChart',
+                'bar',
+                fireSeverityLabels,
+                fireSeverityData,
+                'Fire Severity',
+                fireSeverityColors,
+                fireSeverityColors // Border color same as background for bar
+            );
+
+            // Data for Property Type Distribution Chart (New Pie Chart)
+            const propertyTypeLabels = ['Residential', 'Commercial', 'Market', 'Bushland', 'Industrial', 'Vehicle', 'Construction', 'Other'];
+            const propertyTypeCounts = {};
+            reports.forEach(report => {
+                const type = propertyTypeLabels.includes(report.propertyType) ? report.propertyType : 'Other';
+                propertyTypeCounts[type] = (propertyTypeCounts[type] || 0) + 1;
+            });
+            const propertyTypeData = propertyTypeLabels.map(type => propertyTypeCounts[type] || 0);
+
+            const propertyTypeColors = [
+                'rgba(255, 99, 71, 0.8)',  /* Tomato */
+                'rgba(255, 140, 0, 0.8)',  /* DarkOrange */
+                'rgba(255, 165, 0, 0.8)',  /* Orange */
+                'rgba(255, 215, 0, 0.8)',  /* Gold */
+                'rgba(255, 0, 0, 0.8)',    /* Red */
+                'rgba(178, 34, 34, 0.8)',  /* Firebrick */
+                'rgba(139, 0, 0, 0.8)',    /* DarkRed */
+                'rgba(200, 200, 200, 0.8)' /* Light Gray */
+            ];
+            createChart(
+                'propertyTypeDistributionChart',
+                'pie',
+                propertyTypeLabels,
+                propertyTypeData,
+                'Property Types',
+                propertyTypeColors,
+                propertyTypeColors
+            );
+        }
+
+        /**
+         * Converts an array of JavaScript objects into a CSV (Comma Separated Values) string.
+         * @param {Array<Object>} data - The array of objects to convert.
+         * @returns {string} The CSV string.
+         */
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+
+            const headers = Object.keys(data[0]);
+            const csvRows = [];
+
+            csvRows.push(headers.join(','));
+
+            for (const row of data) {
+                const values = headers.map(header => {
+                    // Handle potential null/undefined values and escape double quotes
+                    const value = row[header] !== undefined && row[header] !== null ? String(row[header]) : '';
+                    const escaped = value.replace(/"/g, '""');
+                    return `"${escaped}"`;
+                });
+                csvRows.push(values.join(','));
+            }
+            return csvRows.join('\n');
+        }
+
+        /**
+         * Triggers the download of a file to the user's browser.
+         * @param {string} content - The content of the file.
+         * @param {string} filename - The desired name of the file.
+         * @param {string} mimeType - The MIME type of the file.
+         */
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        /**
+         * Displays a custom alert message as a modal overlay.
+         * This replaces browser's native `alert()` for better UI consistency and control.
+         * @param {string} message - The main message content to display.
+         * @param {string} title - The title for the alert modal.
+         */
+        function showCustomAlert(message, title = 'Alert') {
+            const customAlert = document.createElement('div');
+            customAlert.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[999]';
+            customAlert.innerHTML = `
+                <div class="bg-red-950 p-6 rounded-lg shadow-lg text-white">
+                    <h3 class="text-xl font-semibold mb-3">${title}</h3>
+                    <p>${message}</p>
+                    <button class="mt-4 px-4 py-2 bg-red-600 rounded-md hover:bg-red-700" onclick="this.closest('.fixed').remove()">OK</button>
+                </div>
+            `;
+            document.body.appendChild(customAlert);
+        }
+
+        /**
+         * Opens the custom report generation modal and populates its filters.
+         */
+        function openCustomReportModal() {
+            const customReportModal = document.getElementById('customReportModal');
+            customReportModal.classList.remove('hidden');
+            populateReportFilters(); // Populate location and property type dropdowns
+
+            isModalOpening = true; // Set flag when opening
+            setTimeout(() => {
+                isModalOpening = false; // Reset flag after a short delay
+            }, 100);
+        }
+
+        /**
+         * Populates the location and property type filter dropdowns in the custom report modal
+         * with unique values from the sampleReports data.
+         */
+        function populateReportFilters() {
+            const locationFilter = document.getElementById('reportLocationFilter');
+            const propertyTypeFilter = document.getElementById('reportPropertyTypeFilter');
+
+            // Store original "All" options to re-add them after clearing
+            const originalLocationOption = locationFilter.querySelector('option[value="all"]').outerHTML;
+            const originalPropertyTypeOption = propertyTypeFilter.querySelector('option[value="all"]').outerHTML;
+
+            // Clear existing options, then re-add "All"
+            locationFilter.innerHTML = originalLocationOption;
+            propertyTypeFilter.innerHTML = originalPropertyTypeOption;
+
+            const uniqueLocations = new Set();
+            const uniquePropertyTypes = new Set();
+
+            sampleReports.forEach(report => {
+                uniqueLocations.add(report.location);
+                if (report.propertyType) { // Ensure propertyType exists before adding
+                    uniquePropertyTypes.add(report.propertyType);
+                }
+            });
+
+            Array.from(uniqueLocations).sort().forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationFilter.appendChild(option);
+            });
+
+            Array.from(uniquePropertyTypes).sort().forEach(propertyType => {
+                const option = document.createElement('option');
+                option.value = propertyType;
+                option.textContent = propertyType;
+                propertyTypeFilter.appendChild(option);
+            });
+        }
+
+        /**
+         * Processes the custom report generation based on selected filters and format.
+         * This function is triggered when the "Generate Report" button in the modal is clicked.
+         * In a Django context, this would typically send an AJAX request to a Django view
+         * that handles report generation (e.g., `/api/generate_report/`).
+         * The Django view would then return the CSV or PDF content.
+         * @param {Event} event - The form submission event.
+         */
+        function processReportGeneration(event) {
+            event.preventDefault(); // Prevent form default submission
+
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const severityFilter = document.getElementById('reportSeverityFilter').value;
+            const locationFilter = document.getElementById('reportLocationFilter').value;
+            const propertyTypeFilter = document.getElementById('reportPropertyTypeFilter').value;
+            const format = document.getElementById('reportFormat').value;
+
+            // Filter reports based on selected criteria
+            const filteredReports = sampleReports.filter(report => {
+                const reportDate = new Date(report.dateTime);
+                const startDateTime = startDate ? new Date(startDate) : null;
+                const endDateTime = endDate ? new Date(endDate) : null;
+
+                const matchesDate = (!startDateTime || reportDate >= startDateTime) &&
+                                    (!endDateTime || reportDate <= endDateTime);
+                const matchesSeverity = severityFilter === 'all' || report.severity === severityFilter;
+                const matchesLocation = locationFilter === 'all' || report.location === locationFilter;
+                const matchesPropertyType = propertyTypeFilter === 'all' || report.propertyType === propertyTypeFilter;
+
+                return matchesDate && matchesSeverity && matchesLocation && matchesPropertyType;
+            });
+
+            let reportContent = '';
+            let filename = 'custom_fire_report';
+            let mimeType = '';
+
+            if (format === 'csv') {
+                reportContent = convertToCSV(filteredReports);
+                filename += '.csv';
+                mimeType = 'text/csv';
+            } else if (format === 'pdf_summary') {
+                reportContent = generatePdfSummary(filteredReports, {
+                    startDate, endDate, severityFilter, locationFilter, propertyTypeFilter
+                });
+                filename += '.txt'; // Using .txt for a simple text-based summary
+                mimeType = 'text/plain';
+            }
+
+            if (filteredReports.length > 0) {
+                downloadFile(reportContent, filename, mimeType);
+                showCustomAlert(`Custom report generated successfully as ${filename}!`, 'Report Generated');
+            } else {
+                showCustomAlert('No fire incidents found matching your selected criteria for the report.', 'No Data');
+            }
+
+            document.getElementById('customReportModal').classList.add('hidden'); // Close the modal
+        }
+
+        /**
+         * Generates a text-based summary resembling a PDF report.
+         * This includes key statistics and a list of filtered reports.
+         * @param {Array<Object>} reports - The filtered fire reports.
+         * @param {Object} filters - The filters applied to generate this report.
+         * @returns {string} A formatted text summary.
+         */
+        function generatePdfSummary(reports, filters) {
+            let summary = `Fire Report Management - Custom Report\n`;
+            summary += `Generated On: ${new Date().toLocaleString()}\n\n`;
+
+            summary += `--- Report Parameters ---\n`;
+            summary += `Date Range: ${filters.startDate || 'All Time'} to ${filters.endDate || 'All Time'}\n`;
+            summary += `Severity: ${filters.severityFilter}\n`;
+            summary += `Location: ${filters.locationFilter}\n`;
+            summary += `Property Type: ${filters.propertyTypeFilter}\n\n`;
+
+            summary += `--- Summary Statistics ---\n`;
+            summary += `Total Reports: ${reports.length}\n`;
+            summary += `Total Fatalities: ${reports.reduce((sum, r) => sum + (r.fatalities || 0), 0)}\n`;
+            summary += `Total Injuries: ${reports.reduce((sum, r) => sum + (r.injuries || 0), 0)}\n`;
+            summary += `Estimated Total Damage: $${reports.reduce((sum, r) => sum + (r.damageEstimate || 0), 0).toLocaleString()}\n`;
+
+            const uniqueCauses = [...new Set(reports.map(r => r.cause))];
+            summary += `Unique Causes: ${uniqueCauses.join(', ') || 'N/A'}\n`;
+
+            const avgResponseTime = reports.length > 0 ? (reports.reduce((sum, r) => sum + (r.responseTime || 0), 0) / reports.length).toFixed(1) : '0';
+            summary += `Average Response Time: ${avgResponseTime} minutes\n\n`;
+
+            summary += `--- Report Details (First 10, if available) ---\n`;
+            if (reports.length === 0) {
+                summary += "No reports to display.\n";
+            } else {
+                reports.slice(0, 10).forEach((report, index) => {
+                    summary += `\nReport #${index + 1}\n`;
+                    summary += `  ID: ${report.id}\n`;
+                    summary += `  Location: ${report.location}\n`;
+                    summary += `  Date/Time: ${new Date(report.dateTime).toLocaleString()}\n`;
+                    summary += `  Cause: ${report.cause}\n`;
+                    summary += `  Severity: ${report.severity}\n`;
+                    summary += `  Status: ${report.status}\n`;
+                    summary += `  Fatalities: ${report.fatalities}\n`;
+                    summary += `  Injuries: ${report.injuries}\n`;
+                    summary += `  Damage Estimate: $${(report.damageEstimate || 0).toLocaleString()}\n`;
+                });
+                if (reports.length > 10) {
+                    summary += `\n... and ${reports.length - 10} more reports.\n`;
+                }
+            }
+
+            summary += `\n--- End of Report ---\n`;
+            return summary;
+        }
+
+        /**
+         * Opens the "All Incidents" modal and populates its filters and table.
+         * In a Django context, the data for this modal would likely be fetched via AJAX
+         * from a Django REST API endpoint that supports filtering and pagination.
+         */
+        function openAllIncidentsModal() {
+            document.getElementById('allIncidentsModal').classList.remove('hidden');
+            populateAllIncidentsFilters(); // Populate dropdowns in this modal
+            filterAllIncidents(); // Apply initial filters and render table
+            
+            // Close other modals if open
+            document.getElementById('reportDetailsModal').classList.add('hidden');
+            document.getElementById('addEditReportModal').classList.add('hidden');
+            document.getElementById('customReportModal').classList.add('hidden');
+
+            isModalOpening = true; // Set flag when opening
+            setTimeout(() => {
+                isModalOpening = false; // Reset flag after a short delay
+            }, 100);
+        }
+
+        /**
+         * Populates the filter dropdowns within the "All Incidents" modal
+         * with unique values from the entire `sampleReports` dataset.
+         * In a Django context, these unique values might be fetched from a dedicated API endpoint
+         * or pre-rendered into the template.
+         */
+        function populateAllIncidentsFilters() {
+            const causeFilter = document.getElementById('allIncidentsCauseFilter');
+            const locationFilter = document.getElementById('allIncidentsLocationFilter');
+            const propertyTypeFilter = document.getElementById('allIncidentsPropertyTypeFilter');
+
+            // Store original "All" options
+            const originalCauseOption = causeFilter.querySelector('option[value="All"]').outerHTML;
+            const originalLocationOption = locationFilter.querySelector('option[value="All"]').outerHTML;
+            const originalPropertyTypeOption = propertyTypeFilter.querySelector('option[value="All"]').outerHTML;
+
+            // Clear existing options, then re-add "All"
+            causeFilter.innerHTML = originalCauseOption;
+            locationFilter.innerHTML = originalLocationOption;
+            propertyTypeFilter.innerHTML = originalPropertyTypeOption;
+
+            const uniqueCauses = new Set();
+            const uniqueLocations = new Set();
+            const uniquePropertyTypes = new Set();
+
+            sampleReports.forEach(report => {
+                uniqueCauses.add(report.cause);
+                uniqueLocations.add(report.location);
+                if (report.propertyType) {
+                    uniquePropertyTypes.add(report.propertyType);
+                }
+            });
+
+            Array.from(uniqueCauses).sort().forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                causeFilter.appendChild(option);
+            });
+            Array.from(uniqueLocations).sort().forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                locationFilter.appendChild(option);
+            });
+            Array.from(uniquePropertyTypes).sort().forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                propertyTypeFilter.appendChild(option);
+            });
+        }
+
+        /**
+         * Applies filters to the full list of incidents and renders the table in the "All Incidents" modal.
+         * In a Django context, this function would typically trigger an AJAX request to a Django view
+         * with the filter parameters, and the view would return the filtered data.
+         */
+        function filterAllIncidents() {
+            const searchTerm = document.getElementById('allIncidentsSearch').value.toLowerCase();
+            const selectedSeverity = document.getElementById('allIncidentsSeverityFilter').value;
+            const selectedStatus = document.getElementById('allIncidentsStatusFilter').value;
+            const selectedCause = document.getElementById('allIncidentsCauseFilter').value;
+            const selectedLocation = document.getElementById('allIncidentsLocationFilter').value;
+            const selectedPropertyType = document.getElementById('allIncidentsPropertyTypeFilter').value;
+            const startDate = document.getElementById('allIncidentsStartDate').value;
+            const endDate = document.getElementById('allIncidentsEndDate').value;
+
+            const filteredReports = sampleReports.filter(report => {
+                const reportDate = new Date(report.dateTime);
+                const startDateTime = startDate ? new Date(startDate) : null;
+                const endDateTime = endDate ? new Date(endDate) : null;
+
+                const matchesSearch = report.id.toLowerCase().includes(searchTerm) ||
+                                      report.location.toLowerCase().includes(searchTerm) ||
+                                      report.cause.toLowerCase().includes(searchTerm) ||
+                                      report.description.toLowerCase().includes(searchTerm);
+                const matchesSeverity = selectedSeverity === 'All' || report.severity === selectedSeverity;
+                const matchesStatus = selectedStatus === 'All' || report.status === selectedStatus;
+                const matchesCause = selectedCause === 'All' || report.cause === selectedCause;
+                const matchesLocation = selectedLocation === 'All' || report.location === selectedLocation;
+                const matchesPropertyType = selectedPropertyType === 'All' || report.propertyType === selectedPropertyType;
+                const matchesDate = (!startDateTime || reportDate >= startDateTime) &&
+                                    (!endDateTime || reportDate <= endDateTime);
+
+                return matchesSearch && matchesSeverity && matchesStatus && matchesCause && matchesLocation && matchesPropertyType && matchesDate;
+            });
+            renderAllIncidentsTable(filteredReports);
+        }
+
+        /**
+         * Renders the table inside the "All Incidents" modal.
+         * @param {Array<Object>} reportsToDisplay - The filtered reports to display.
+         */
+        function renderAllIncidentsTable(reportsToDisplay) {
+            const tableBody = document.getElementById('allIncidentsTableBody');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            if (reportsToDisplay.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-4 text-center text-red-200">No incidents found matching your criteria.</td></tr>`;
+                return;
+            }
+
+            reportsToDisplay.forEach(report => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-red-900 transition duration-150 ease-in-out'; /* Adjusted for new red */
+                const severityClass = report.severity === 'High' ? 'bg-red-700' :
+                                      report.severity === 'Medium' ? 'bg-orange-600' : 'bg-green-600';
+                const statusClass = report.status === 'Resolved' ? 'bg-green-600' :
+                                    report.status === 'Pending' ? 'bg-orange-600' : 'bg-blue-600';
+
+                row.innerHTML = `
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-white">${report.id}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-red-100">${report.location}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-red-100">${report.dateTime}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-red-100">${report.cause}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${severityClass} text-white">
+                            ${report.severity}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} text-white">
+                            ${report.status}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-red-100">${report.propertyType || 'N/A'}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                        <button class="text-red-400 hover:text-red-500 mr-2 view-details-btn-all" data-report-id="${report.id}">Details</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Attach event listeners for "Details" buttons in this modal
+            document.querySelectorAll('#allIncidentsTableBody .view-details-btn-all').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const reportId = event.target.dataset.reportId;
+                    console.log(`Details button clicked in All Incidents for Report ID: ${reportId}`); // Debugging log
+                    const report = sampleReports.find(r => r.id === reportId);
+                    if (report) {
+                        populateReportDetailsModal(report);
+                        document.getElementById('allIncidentsModal').classList.add('hidden'); // Close this modal
+                    } else {
+                        console.error(`Report with ID ${reportId} not found in All Incidents for details.`);
+                    }
+                });
+            });
+        }
+
+
+        // --- JavaScript for main functionality ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get references to all necessary DOM elements
+            const reportDetailsModal = document.getElementById('reportDetailsModal');
+            const addNewReportButton = document.getElementById('addNewReportButton');
+            const addEditReportModal = document.getElementById('addEditReportModal');
+            const fireReportForm = document.getElementById('fireReportForm');
+            const reportIdInput = document.getElementById('reportIdInput');
+            const locationInput = document.getElementById('locationInput');
+            const dateTimeInput = document.getElementById('dateTimeInput');
+            const causeInput = document.getElementById('causeInput');
+            const severityInput = document.getElementById('severityInput');
+            const statusInput = document.getElementById('statusInput');
+            const damageEstimateInput = document.getElementById('damageEstimateInput');
+            const fatalitiesInput = document.getElementById('fatalitiesInput');
+            const injuriesInput = document.getElementById('injuriesInput');
+            const responseTimeInput = document.getElementById('responseTimeInput');
+            const propertyTypeInput = document.getElementById('propertyTypeInput');
+            const mediaUploadInput = document.getElementById('mediaUpload');
+            const mediaPreviewContainer = document.getElementById('mediaPreview');
+
+            // Elements for the EDITABLE Report Details Modal
+            const editReportForm = document.getElementById('editReportForm');
+            const editReportId = document.getElementById('editReportId');
+            const modalReportIdDisplay = document.getElementById('modalReportIdDisplay');
+            const editLocation = document.getElementById('editLocation');
+            const editDateTime = document.getElementById('editDateTime');
+            const editCause = document.getElementById('editCause');
+            const editSeverity = document.getElementById('editSeverity');
+            const editStatus = document.getElementById('editStatus');
+            const editDamageEstimate = document.getElementById('editDamageEstimate');
+            const editFatalities = document.getElementById('editFatalities');
+            const editInjuries = document.getElementById('editInjuries');
+            const editResponseTime = document.getElementById('editResponseTime');
+            const editPropertyType = document.getElementById('editPropertyType');
+            const editDescription = document.getElementById('editDescription');
+            const editChatbotLog = document.getElementById('editChatbotLog');
+            const editAdminLog = document.getElementById('editAdminLog');
+            const editInternalNotes = document.getElementById('editInternalNotes');
+            const flagAsDuplicateBtn = document.getElementById('flagAsDuplicateBtn');
+
+            // Elements for filtering Recent Reports table
+            const recentReportsSearchInput = document.getElementById('recentReportsSearchInput');
+            const recentSeverityFilter = document.getElementById('recentSeverityFilter');
+            const recentStatusFilter = document.getElementById('recentStatusFilter');
+
+            // Custom Report button (assuming there's a button for this, though not explicitly in the provided HTML)
+            // If you intend to have a "Generate Custom Report" button, add it to your HTML, e.g.:
+            // <button id="generateCustomReportBtn" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-lg">Generate Custom Report</button>
+            const generateCustomReportBtn = document.getElementById('generateCustomReportBtn'); // This might be null if not in HTML
+            if (generateCustomReportBtn) { // Only add listener if button exists
+                generateCustomReportBtn.addEventListener('click', openCustomReportModal);
+            }
+            document.getElementById('reportGenerationForm').addEventListener('submit', processReportGeneration);
+
+
+            // All Incidents Modal elements
+            const viewAllIncidentsBtn = document.getElementById('viewAllIncidentsBtn');
+            const allIncidentsModal = document.getElementById('allIncidentsModal');
+            const allIncidentsSearch = document.getElementById('allIncidentsSearch');
+            const allIncidentsSeverityFilter = document.getElementById('allIncidentsSeverityFilter');
+            const allIncidentsStatusFilter = document.getElementById('allIncidentsStatusFilter');
+            const allIncidentsCauseFilter = document.getElementById('allIncidentsCauseFilter');
+            const allIncidentsLocationFilter = document.getElementById('allIncidentsLocationFilter');
+            const allIncidentsPropertyTypeFilter = document.getElementById('allIncidentsPropertyTypeFilter');
+            const allIncidentsStartDate = document.getElementById('allIncidentsStartDate');
+            const allIncidentsEndDate = document.getElementById('allIncidentsEndDate');
+
+
+            let selectedMediaFiles = []; // To store base64 representations of uploaded images
+
+            // --- Close modals if clicked outside (simplified for robustness) ---
+            document.addEventListener('click', (event) => {
+                // If a modal is in the process of opening, ignore this click to prevent immediate closing
+                if (isModalOpening) {
+                    return;
+                }
+
+                // Check if the click was inside any modal content area (for *currently visible* modals)
+                // This handles clicks inside the modal to prevent closing it
+                const isClickInsideAnyModalContent = Array.from(document.querySelectorAll('.modal:not(.hidden) .modal-content'))
+                                                        .some(content => content.contains(event.target));
+
+                // Check if the click originated from a button that *opens* a modal
+                // This prevents closing when a modal is intentionally opened
+                const isClickOnModalToggleButton = event.target.closest('#addNewReportButton') ||
+                                                   event.target.closest('#viewAllIncidentsBtn') ||
+                                                   event.target.closest('.view-details-btn'); // Crucial addition
+
+                // If the click was NOT inside any open modal content AND NOT on a button that opens a modal, then close all modals.
+                if (!isClickInsideAnyModalContent && !isClickOnModalToggleButton) {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.classList.add('hidden');
+                    });
+                }
+            });
+
+            // --- Media Upload Logic for Add New Report Modal ---
+            mediaUploadInput.addEventListener('change', (event) => {
+                mediaPreviewContainer.innerHTML = ''; // Clear previous previews
+                selectedMediaFiles = []; // Reset array
+                const files = event.target.files;
+
+                if (files.length > 0) {
+                    Array.from(files).forEach(file => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const img = document.createElement('img');
+                                img.src = e.target.result;
+                                img.alt = file.name; // Add alt text for accessibility
+                                img.className = 'w-full h-24 object-cover rounded-md'; // Consistent size for preview
+                                mediaPreviewContainer.appendChild(img);
+                                selectedMediaFiles.push(e.target.result); // Store base64 string
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+            });
+
+            // --- Add New Fire Report Logic ---
+            addNewReportButton.addEventListener('click', () => {
+                document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hidden')); // Close others
+                addEditReportModal.classList.remove('hidden');
+                isModalOpening = true; // Set flag when opening
+                setTimeout(() => { isModalOpening = false; }, 100); // Reset after a short delay
+                fireReportForm.reset(); // Clear form for new entry
+                mediaPreviewContainer.innerHTML = ''; // Clear media previews
+                selectedMediaFiles = []; // Clear selected media files
+                // Generate a simple dummy report ID (In Django, this would typically be handled by the database's auto-incrementing primary key)
+                const nextIdNum = sampleReports.length > 0 ? Math.max(...sampleReports.map(r => parseInt(r.id.replace('FR-', '')))) + 1 : 1;
+                reportIdInput.value = 'FR-' + nextIdNum.toString().padStart(3, '0');
+                // Pre-fill current date/time (Django forms can also pre-fill this)
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                const day = now.getDate().toString().padStart(2, '0');
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                dateTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            });
+
+            fireReportForm.addEventListener('submit', (event) => {
+                event.preventDefault(); // Prevent default form submission
+
+                // Construct data object from form inputs.
+                // In a Django context, you would gather these values and send them as JSON or FormData
+                // to a Django view (e.g., a Django REST Framework API endpoint).
+                const newReport = {
+                    id: reportIdInput.value, // This ID would likely be ignored or validated by Django
+                    location: locationInput.value,
+                    dateTime: dateTimeInput.value,
+                    cause: causeInput.value,
+                    severity: severityInput.value,
+                    status: statusInput.value,
+                    damageEstimate: parseFloat(damageEstimateInput.value) || 0,
+                    fatalities: parseInt(fatalitiesInput.value) || 0,
+                    injuries: parseInt(injuriesInput.value) || 0,
+                    responseTime: parseInt(responseTimeInput.value) || 0,
+                    propertyType: propertyTypeInput.value,
+                    media: [...selectedMediaFiles], // For Django, these would be sent as file uploads or base64 strings
+                    description: 'No description provided yet.',
+                    chatbotLog: 'No chatbot log for this report yet.',
+                    adminLog: `Admin User: Report Added (${new Date().toLocaleString()})`,
+                    internalNotes: ''
+                };
+
+                // Simulate saving to a backend. In Django, this would be a fetch() POST request:
+                // fetch('/api/fire_reports/create/', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //         'X-CSRFToken': getCookie('csrftoken') // Get CSRF token for Django
+                //     },
+                //     body: JSON.stringify(newReport)
+                // })
+                // .then(response => response.json())
+                // .then(data => {
+                //     // On successful save, add the new report (with its actual ID from Django) to sampleReports
+                //     sampleReports.push(data);
+                //     sampleReports.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+                //     applyRecentReportsFilters();
+                //     initializeAllCharts();
+                //     updateSummaryStatistics();
+                //     showCustomAlert('The new fire report has been successfully added.', 'Report Saved!');
+                //     addEditReportModal.classList.add('hidden');
+                //     fireReportForm.reset();
+                //     mediaPreviewContainer.innerHTML = '';
+                //     selectedMediaFiles = [];
+                // })
+                // .catch(error => {
+                //     console.error('Error saving report:', error);
+                //     showCustomAlert('Failed to save report. Please try again.', 'Error');
+                // });
+
+                sampleReports.push(newReport);
+                // Sort reports by date to ensure "Recent Reports" always shows latest
+                sampleReports.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+
+                // Re-render table and charts to reflect new data
+                applyRecentReportsFilters(); // Re-render recent reports table
+                initializeAllCharts();
+                updateSummaryStatistics();
+
+                // Show confirmation message (using custom alert)
+                showCustomAlert('The new fire report has been successfully added.', 'Report Saved!');
+
+                addEditReportModal.classList.add('hidden');
+                fireReportForm.reset(); // Clear the form
+                mediaPreviewContainer.innerHTML = ''; // Clear media previews after saving
+                selectedMediaFiles = []; // Reset selected media files after saving
+            });
+
+            // --- Save Changes in Report Details Modal ---
+            editReportForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const reportIdToUpdate = editReportId.value;
+                const reportIndex = sampleReports.findIndex(r => r.id === reportIdToUpdate);
+
+                if (reportIndex !== -1) {
+                    const updatedReport = {
+                        ...sampleReports[reportIndex], // Keep existing properties
+                        location: editLocation.value,
+                        dateTime: editDateTime.value,
+                        cause: editCause.value,
+                        severity: editSeverity.value,
+                        status: editStatus.value,
+                        damageEstimate: parseFloat(editDamageEstimate.value) || 0,
+                        fatalities: parseInt(editFatalities.value) || 0,
+                        injuries: parseInt(editInjuries.value) || 0,
+                        responseTime: parseInt(editResponseTime.value) || 0,
+                        propertyType: editPropertyType.value,
+                        description: editDescription.value,
+                        internalNotes: editInternalNotes.value,
+                        adminLog: sampleReports[reportIndex].adminLog + `\nAdmin User: Details Updated (${new Date().toLocaleString()})`
+                    };
+                    sampleReports[reportIndex] = updatedReport;
+                    console.log('Report updated:', updatedReport);
+
+                    // In Django, this would be a fetch() PUT/PATCH request to update the specific report:
+                    // fetch(`/api/fire_reports/${reportIdToUpdate}/`, {
+                    //     method: 'PUT', // or 'PATCH'
+                    //     headers: {
+                    //         'Content-Type': 'application/json',
+                    //         'X-CSRFToken': getCookie('csrftoken')
+                    //     },
+                    //     body: JSON.stringify(updatedReport)
+                    // })
+                    // .then(response => response.json())
+                    // .then(data => {
+                    //     // Update local data and UI
+                    //     sampleReports[reportIndex] = data; // Use data from Django response
+                    //     applyRecentReportsFilters();
+                    //     initializeAllCharts();
+                    //     updateSummaryStatistics();
+                    //     showCustomAlert('Fire report details have been successfully updated.', 'Changes Saved!');
+                    //     reportDetailsModal.classList.add('hidden');
+                    // })
+                    // .catch(error => {
+                    //     console.error('Error updating report:', error);
+                    //     showCustomAlert('Failed to update report. Please try again.', 'Error');
+                    // });
+
+
+                    // Re-render table and charts
+                    applyRecentReportsFilters(); // Re-render recent reports table
+                    initializeAllCharts();
+                    updateSummaryStatistics();
+
+                    // Show confirmation message
+                    showCustomAlert('Fire report details have been successfully updated.', 'Changes Saved!');
+
+                    reportDetailsModal.classList.add('hidden');
+                } else {
+                    console.error('Report not found for update:', reportIdToUpdate);
+                }
+            });
+
+            // --- Flag as Duplicate Button Logic ---
+            flagAsDuplicateBtn.addEventListener('click', () => {
+                const reportIdToFlag = editReportId.value;
+                const reportIndex = sampleReports.findIndex(r => r.id === reportIdToFlag);
+
+                if (reportIndex !== -1) {
+                    // Update status to 'Investigating' or a specific 'Duplicate' status
+                    sampleReports[reportIndex].status = 'Investigating'; // Or 'Duplicate' if you add that option
+                    sampleReports[reportIndex].adminLog += `\nAdmin User: Flagged as Duplicate (${new Date().toLocaleString()})`;
+                    
+                    // In Django, this would be an AJAX request to a specific view/endpoint
+                    // that handles flagging a report as duplicate.
+                    // fetch(`/api/fire_reports/${reportIdToFlag}/flag_duplicate/`, {
+                    //     method: 'POST',
+                    //     headers: {
+                    //         'X-CSRFToken': getCookie('csrftoken')
+                    //     }
+                    // })
+                    // .then(response => response.json())
+                    // .then(data => {
+                    //     // Update local data based on Django response
+                    //     sampleReports[reportIndex].status = data.status;
+                    //     sampleReports[reportIndex].adminLog = data.admin_log;
+                    //     showCustomAlert(`Report ${reportIdToFlag} has been flagged as a potential duplicate and its status set to 'Investigating'.`, 'Report Flagged!');
+                    //     applyRecentReportsFilters();
+                    //     reportDetailsModal.classList.add('hidden');
+                    //     updateSummaryStatistics();
+                    // })
+                    // .catch(error => {
+                    //     console.error('Error flagging report:', error);
+                    //     showCustomAlert('Failed to flag report. Please try again.', 'Error');
+                    // });
+
+                    // Show confirmation message
+                    showCustomAlert(`Report ${reportIdToFlag} has been flagged as a potential duplicate and its status set to 'Investigating'.`, 'Report Flagged!');
+
+                    applyRecentReportsFilters(); // Update table to show new status
+                    reportDetailsModal.classList.add('hidden');
+                    updateSummaryStatistics();
+                }
+            });
+
+            // --- Filtering Logic for Recent Reports Table ---
+            function applyRecentReportsFilters() {
+                const searchTerm = recentReportsSearchInput.value.toLowerCase();
+                const selectedSeverity = recentSeverityFilter.value;
+                const selectedStatus = recentStatusFilter.value;
+
+                const filteredReports = sampleReports.filter(report => {
+                    const matchesSearch = report.id.toLowerCase().includes(searchTerm) ||
+                                          report.location.toLowerCase().includes(searchTerm) ||
+                                          report.cause.toLowerCase().includes(searchTerm) ||
+                                          report.description.toLowerCase().includes(searchTerm);
+                    const matchesSeverity = selectedSeverity === 'All' || report.severity === selectedSeverity;
+                    const matchesStatus = selectedStatus === 'All' || report.status === selectedStatus;
+                    return matchesSearch && matchesSeverity && matchesStatus;
+                }).slice(0, 10); // Only show the most recent 10 filtered reports
+                renderReportsTable(filteredReports);
+            }
+
+            // Event listeners for recent reports filters
+            recentReportsSearchInput.addEventListener('input', applyRecentReportsFilters);
+            recentSeverityFilter.addEventListener('change', applyRecentReportsFilters);
+            recentStatusFilter.addEventListener('change', applyRecentReportsFilters);
+
+            // --- Custom Report Generation Button Listener ---
+            // This button would typically trigger a modal or redirect to a Django view for report generation.
+            // If the report is generated via AJAX, the JS handles the download.
+            // If Django generates a full PDF, it would return a FileResponse.
+            // generateCustomReportBtn.addEventListener('click', openCustomReportModal); // Uncomment if you add this button to HTML
+
+
+            // --- All Incidents Modal Event Listeners ---
+            viewAllIncidentsBtn.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevent global click from immediately closing
+                openAllIncidentsModal(); // This function already handles showing the modal
+            });
+
+            allIncidentsSearch.addEventListener('input', filterAllIncidents);
+            allIncidentsSeverityFilter.addEventListener('change', filterAllIncidents);
+            allIncidentsStatusFilter.addEventListener('change', filterAllIncidents);
+            allIncidentsCauseFilter.addEventListener('change', filterAllIncidents);
+            allIncidentsLocationFilter.addEventListener('change', filterAllIncidents);
+            allIncidentsPropertyTypeFilter.addEventListener('change', filterAllIncidents);
+            allIncidentsStartDate.addEventListener('change', filterAllIncidents);
+            allIncidentsEndDate.addEventListener('change', filterAllIncidents);
+
+
+            // Initial rendering on page load
+            applyRecentReportsFilters(); // Render recent reports table initially
+            initializeAllCharts();
+            updateSummaryStatistics();
+
+            // Re-render charts on window resize to maintain sharpness
+            window.addEventListener('resize', () => {
+                initializeAllCharts();
+            });
+
+            // Helper function to get CSRF token for Django AJAX requests
+            // function getCookie(name) {
+            //     let cookieValue = null;
+            //     if (document.cookie && document.cookie !== '') {
+            //         const cookies = document.cookie.split(';');
+            //         for (let i = 0; i < cookies.length; i++) {
+            //             const cookie = cookies[i].trim();
+            //             // Does this cookie string begin with the name we want?
+            //             if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            //                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            //                 break;
+            //             }
+            //         }
+            //     }
+            //     return cookieValue;
+            // }
+        });
+    </script>
+</body>
+</html>
