@@ -1,0 +1,363 @@
+/* Reused styles from the main app for consistency */
+body {
+  font-family: "Inter", sans-serif;
+}
+
+/* Mobile navigation styles (reused) */
+.mobile-nav {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-out;
+  z-index: 100;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 64%;
+  max-width: 250px;
+  background-color: #e2e8f0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  padding-top: 5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-nav.open {
+  transform: translateX(0);
+}
+
+/* Chat specific styles */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  flex-grow: 1; /* Allow it to grow to fill available space */
+  min-height: 400px; /* Set a minimum height for better appearance */
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Ensures content inside is clipped */
+  position: relative; /* Added for better clipping context */
+}
+
+.chat-messages {
+  flex-grow: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  background-color: #f8fafc; /* bg-gray-50 */
+  border-bottom: 1px solid #e2e8f0; /* border-gray-200 */
+}
+
+.message {
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.message.user {
+  align-items: flex-end;
+}
+
+.message.bot {
+  align-items: flex-start;
+}
+
+.message-header {
+  font-size: 0.75rem; /* text-xs */
+  color: #6b7280; /* gray-500 */
+  margin-bottom: 0.25rem;
+}
+
+.message.user .message-header {
+  text-align: right;
+  margin-right: 0.5rem; /* Align with bubble */
+}
+
+.message.bot .message-header {
+  text-align: left;
+  margin-left: 0.5rem; /* Align with bubble */
+}
+
+.message-bubble {
+  max-width: 80%;
+  padding: 0.75rem 1rem;
+  border-radius: 1.25rem; /* More rounded */
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: pre-wrap; /* Preserve whitespace and line breaks for general text */
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out; /* Added transition */
+}
+
+.message.user .message-bubble {
+  background-color: #3b82f6; /* blue-500 */
+  color: white;
+  border-bottom-right-radius: 0.25rem; /* Sharp corner for user */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); /* Subtle shadow for user bubble */
+}
+
+.message.bot .message-bubble {
+  background-color: #e2e8f0; /* gray-200 */
+  color: #1f2937; /* gray-800 */
+  border-bottom-left-radius: 0.25rem; /* Sharp corner for bot */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); /* Subtle shadow for bot bubble */
+}
+
+/* Styling for lists within message bubbles */
+.message-bubble ul,
+.message-bubble ol {
+  margin: 0.5rem 0 0.5rem 1.25rem; /* Indent lists */
+  padding: 0;
+}
+
+.message-bubble li {
+  margin-bottom: 0.25rem;
+  padding-left: 0.25rem; /* Small padding for list marker */
+}
+
+.message-bubble p {
+  margin-bottom: 0.5rem; /* Space between paragraphs */
+}
+
+.message-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.chat-input-area {
+  display: flex;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0; /* gray-200 */
+}
+
+.chat-input-area input {
+  flex-grow: 1;
+  padding: 0.85rem 1rem; /* Slightly increased vertical padding */
+  border: 1px solid #cbd5e1; /* gray-300 */
+  border-radius: 0.5rem;
+  outline: none;
+  font-size: 1rem;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.chat-input-area input:focus {
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.chat-input-area button {
+  background-color: #3b82f6; /* blue-600 */
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  margin-left: 0.75rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-input-area button:hover {
+  background-color: #2563eb; /* blue-700 */
+  transform: translateY(-1px);
+}
+
+.chat-input-area button:active {
+  /* Added active state */
+  transform: scale(0.98);
+  animation: pulse 0.5s ease-out; /* Apply pulse animation on active */
+}
+
+.chat-input-area button:disabled {
+  background-color: #9ca3af; /* gray-400 */
+  cursor: not-allowed;
+  transform: none;
+  animation: none; /* Disable pulse when disabled */
+}
+
+/* Loading spinner for chatbot */
+.loading-spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top: 3px solid #3b82f6; /* blue-500 */
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  animation: spin 1s linear infinite;
+  margin-left: 0.5rem;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pulse animation for button */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); /* blue-500 with opacity */
+  }
+  50% {
+    transform: scale(1.1); /* More pronounced scale */
+    box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); /* Wider shadow spread */
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+/* Typing indicator specific styles */
+.typing-indicator .dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #94a3b8; /* slate-400 */
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0 0.125rem;
+  animation: bounce 0.6s infinite ease-in-out;
+}
+
+.typing-indicator .dot:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.typing-indicator .dot:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-0.25rem);
+  }
+}
+
+/* Message Box styles (reused) */
+.message-box {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  color: white;
+  font-weight: 500;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  text-align: center;
+}
+
+.message-box.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.message-box.hide {
+  opacity: 0;
+  transform: translateX(-50%) translateY(100%);
+}
+
+.message-box.success {
+  background-color: #10b981;
+}
+
+.message-box.error {
+  background-color: #ef4444;
+}
+
+.message-box.warning {
+  background-color: #f59e0b;
+}
+
+.quick-questions-container {
+  display: flex;
+  overflow-x: auto; /* Enable horizontal scrolling */
+  white-space: nowrap; /* Prevent wrapping */
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #f0f4f8; /* Light gray background */
+  border-top: 1px solid #e2e8f0;
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  /* Hide scrollbar for aesthetic purposes, but still allow scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.quick-questions-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.quick-question-button {
+  flex-shrink: 0; /* Prevent buttons from shrinking */
+  background-color: #e2e8f0; /* Gray-200 */
+  color: #4b5563; /* Gray-700 */
+  padding: 0.5rem 1rem;
+  border-radius: 9999px; /* Full rounded */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out,
+    transform 0.1s ease-out, box-shadow 0.1s ease-out; /* Added transform and shadow transitions */
+  border: 1px solid #cbd5e1; /* Gray-300 */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+}
+
+.quick-question-button:hover {
+  background-color: #d1d5db; /* Gray-300 */
+  color: #1f2937; /* Gray-900 */
+  transform: translateY(-1px); /* Slight lift on hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* More pronounced shadow on hover */
+}
+
+.quick-question-button:active {
+  /* Added active state */
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Scroll to bottom button */
+.scroll-to-bottom-button {
+  position: absolute;
+  bottom: calc(1rem + 60px); /* Adjust based on input area height + padding */
+  right: 1rem;
+  background-color: #3b82f6; /* blue-500 */
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  opacity: 0;
+  transform: translateY(10px);
+  z-index: 10; /* Ensure it's above messages but below modal */
+}
+
+.scroll-to-bottom-button.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-to-bottom-button:hover {
+  background-color: #2563eb; /* blue-700 */
+  transform: translateY(-2px);
+}

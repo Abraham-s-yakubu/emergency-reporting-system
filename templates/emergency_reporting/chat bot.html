@@ -1,794 +1,218 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GuardianLink - Chatbot</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Reused styles from the main app for consistency */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Mobile navigation styles (reused) */
-        .mobile-nav {
-            transform: translateX(-100%);
-            transition: transform 0.3s ease-out;
-            z-index: 100;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 64%;
-            max-width: 250px;
-            background-color: #e2e8f0;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-            padding-top: 5rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .mobile-nav.open {
-            transform: translateX(0);
-        }
-
-        /* Chat specific styles */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            max-width: 600px;
-            flex-grow: 1; /* Allow it to grow to fill available space */
-            min-height: 400px; /* Set a minimum height for better appearance */
-            background-color: #ffffff;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            overflow: hidden; /* Ensures content inside is clipped */
-            position: relative; /* Added for better clipping context */
-        }
-
-        .chat-messages {
-            flex-grow: 1;
-            padding: 1rem;
-            overflow-y: auto;
-            background-color: #f8fafc; /* bg-gray-50 */
-            border-bottom: 1px solid #e2e8f0; /* border-gray-200 */
-        }
-
-        .message {
-            margin-bottom: 0.75rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message.user {
-            align-items: flex-end;
-        }
-
-        .message.bot {
-            align-items: flex-start;
-        }
-
-        .message-header {
-            font-size: 0.75rem; /* text-xs */
-            color: #6b7280; /* gray-500 */
-            margin-bottom: 0.25rem;
-        }
-
-        .message.user .message-header {
-            text-align: right;
-            margin-right: 0.5rem; /* Align with bubble */
-        }
-
-        .message.bot .message-header {
-            text-align: left;
-            margin-left: 0.5rem; /* Align with bubble */
-        }
-
-        .message-bubble {
-            max-width: 80%;
-            padding: 0.75rem 1rem;
-            border-radius: 1.25rem; /* More rounded */
-            line-height: 1.4;
-            word-wrap: break-word;
-            white-space: pre-wrap; /* Preserve whitespace and line breaks for general text */
-            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out; /* Added transition */
-        }
-
-        .message.user .message-bubble {
-            background-color: #3b82f6; /* blue-500 */
-            color: white;
-            border-bottom-right-radius: 0.25rem; /* Sharp corner for user */
-            box-shadow: 0 1px 3px rgba(0,0,0,0.15); /* Subtle shadow for user bubble */
-        }
-
-        .message.bot .message-bubble {
-            background-color: #e2e8f0; /* gray-200 */
-            color: #1f2937; /* gray-800 */
-            border-bottom-left-radius: 0.25rem; /* Sharp corner for bot */
-            box-shadow: 0 1px 2px rgba(0,0,0,0.08); /* Subtle shadow for bot bubble */
-        }
-
-        /* Styling for lists within message bubbles */
-        .message-bubble ul, .message-bubble ol {
-            margin: 0.5rem 0 0.5rem 1.25rem; /* Indent lists */
-            padding: 0;
-        }
-
-        .message-bubble li {
-            margin-bottom: 0.25rem;
-            padding-left: 0.25rem; /* Small padding for list marker */
-        }
-
-        .message-bubble p {
-            margin-bottom: 0.5rem; /* Space between paragraphs */
-        }
-
-        .message-bubble p:last-child {
-            margin-bottom: 0;
-        }
-
-        .chat-input-area {
-            display: flex;
-            padding: 1rem;
-            background-color: #ffffff;
-            border-top: 1px solid #e2e8f0; /* gray-200 */
-        }
-
-        .chat-input-area input {
-            flex-grow: 1;
-            padding: 0.85rem 1rem; /* Slightly increased vertical padding */
-            border: 1px solid #cbd5e1; /* gray-300 */
-            border-radius: 0.5rem;
-            outline: none;
-            font-size: 1rem;
-            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-
-        .chat-input-area input:focus {
-            border-color: #3b82f6; /* blue-500 */
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .chat-input-area button {
-            background-color: #3b82f6; /* blue-600 */
-            color: white;
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.5rem;
-            margin-left: 0.75rem;
-            font-weight: 600;
-            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .chat-input-area button:hover {
-            background-color: #2563eb; /* blue-700 */
-            transform: translateY(-1px);
-        }
-
-        .chat-input-area button:active { /* Added active state */
-            transform: scale(0.98);
-            animation: pulse 0.5s ease-out; /* Apply pulse animation on active */
-        }
-
-        .chat-input-area button:disabled {
-            background-color: #9ca3af; /* gray-400 */
-            cursor: not-allowed;
-            transform: none;
-            animation: none; /* Disable pulse when disabled */
-        }
-
-        /* Loading spinner for chatbot */
-        .loading-spinner {
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            border-top: 3px solid #3b82f6; /* blue-500 */
-            border-radius: 50%;
-            width: 1.5rem;
-            height: 1.5rem;
-            animation: spin 1s linear infinite;
-            margin-left: 0.5rem;
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Pulse animation for button */
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); /* blue-500 with opacity */
-            }
-            50% {
-                transform: scale(1.1); /* More pronounced scale */
-                box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); /* Wider shadow spread */
-            }
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-            }
-        }
-
-        /* Typing indicator specific styles */
-        .typing-indicator .dot {
-            width: 0.5rem;
-            height: 0.5rem;
-            background-color: #94a3b8; /* slate-400 */
-            border-radius: 50%;
-            display: inline-block;
-            margin: 0 0.125rem;
-            animation: bounce 0.6s infinite ease-in-out;
-        }
-
-        .typing-indicator .dot:nth-child(2) {
-            animation-delay: 0.1s;
-        }
-
-        .typing-indicator .dot:nth-child(3) {
-            animation-delay: 0.2s;
-        }
-
-        @keyframes bounce {
-            0%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-0.25rem);
-            }
-        }
-
-        /* Message Box styles (reused) */
-        .message-box {
-            position: fixed;
-            bottom: 1rem;
-            left: 50%;
-            transform: translateX(-50%) translateY(100%);
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.5rem;
-            color: white;
-            font-weight: 500;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            min-width: 200px;
-            text-align: center;
-        }
-
-        .message-box.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .message-box.hide {
-            opacity: 0;
-            transform: translateX(-50%) translateY(100%);
-        }
-
-        .message-box.success {
-            background-color: #10b981;
-        }
-
-        .message-box.error {
-            background-color: #ef4444;
-        }
-
-        .message-box.warning {
-            background-color: #f59e0b;
-        }
-
-        .quick-questions-container {
-            display: flex;
-            overflow-x: auto; /* Enable horizontal scrolling */
-            white-space: nowrap; /* Prevent wrapping */
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background-color: #f0f4f8; /* Light gray background */
-            border-top: 1px solid #e2e8f0;
-            border-bottom-left-radius: 0.75rem;
-            border-bottom-right-radius: 0.75rem;
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-            /* Hide scrollbar for aesthetic purposes, but still allow scrolling */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE and Edge */
-        }
-
-        .quick-questions-container::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
-
-        .quick-question-button {
-            flex-shrink: 0; /* Prevent buttons from shrinking */
-            background-color: #e2e8f0; /* Gray-200 */
-            color: #4b5563; /* Gray-700 */
-            padding: 0.5rem 1rem;
-            border-radius: 9999px; /* Full rounded */
-            font-size: 0.875rem; /* text-sm */
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.1s ease-out, box-shadow 0.1s ease-out; /* Added transform and shadow transitions */
-            border: 1px solid #cbd5e1; /* Gray-300 */
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle shadow */
-        }
-
-        .quick-question-button:hover {
-            background-color: #d1d5db; /* Gray-300 */
-            color: #1f2937; /* Gray-900 */
-            transform: translateY(-1px); /* Slight lift on hover */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* More pronounced shadow on hover */
-        }
-
-        .quick-question-button:active { /* Added active state */
-            transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
-        /* Scroll to bottom button */
-        .scroll-to-bottom-button {
-            position: absolute;
-            bottom: calc(1rem + 60px); /* Adjust based on input area height + padding */
-            right: 1rem;
-            background-color: #3b82f6; /* blue-500 */
-            color: white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-            opacity: 0;
-            transform: translateY(10px);
-            z-index: 10; /* Ensure it's above messages but below modal */
-        }
-
-        .scroll-to-bottom-button.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .scroll-to-bottom-button:hover {
-            background-color: #2563eb; /* blue-700 */
-            transform: translateY(-2px);
-        }
-    </style>
-</head>
-<body class="min-h-screen bg-gray-100 text-gray-900 flex flex-col items-center p-4 sm:p-6 md:p-8">
-
-    <header class="w-full max-w-4xl flex justify-between items-center py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg sticky top-0 z-50 rounded-b-xl">
-        <div class="flex items-center space-x-3">
-            <button id="menu-button" class="text-white hover:text-blue-100 focus:outline-none"
-                    aria-haspopup="true" aria-expanded="false" aria-controls="mobile-nav">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
-                    <line x1="4" y1="12" x2="20" y2="12"></line>
-                    <line x1="4" y1="6" x2="20" y2="6"></line>
-                    <line x1="4" y1="18" x2="20" y2="18"></line>
-                </svg>
-            </button>
-            <div class="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check">
-                    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C6.5 20.5 3 18 3 13V6a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
-                    <path d="m9 12 2 2 4-4"></path>
-                </svg>
-                <h1 class="text-xl sm:text-2xl font-bold text-white">GuardianLink</h1>
-            </div>
-        </div>
-        <button id="start-new-chat-button" class="text-white hover:text-blue-100 focus:outline-none text-sm px-3 py-1 rounded-full border border-white hover:bg-blue-700 transition-colors duration-200">
-            New Chat
+    <link
+      rel="stylesheet"
+      href="{% static 'css/emergency reporting css/chat_bot.css' %}"
+    />
+  </head>
+  <body
+    class="min-h-screen bg-gray-100 text-gray-900 flex flex-col items-center p-4 sm:p-6 md:p-8"
+  >
+    <header
+      class="w-full max-w-4xl flex justify-between items-center py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg sticky top-0 z-50 rounded-b-xl"
+    >
+      <div class="flex items-center space-x-3">
+        <button
+          id="menu-button"
+          class="text-white hover:text-blue-100 focus:outline-none"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="mobile-nav"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-6 w-6"
+          >
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="4" y1="18" x2="20" y2="18"></line>
+          </svg>
         </button>
+        <div class="flex items-center space-x-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-shield-check"
+          >
+            <path
+              d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C6.5 20.5 3 18 3 13V6a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"
+            ></path>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
+          <h1 class="text-xl sm:text-2xl font-bold text-white">GuardianLink</h1>
+        </div>
+      </div>
+      <button
+        id="start-new-chat-button"
+        class="text-white hover:text-blue-100 focus:outline-none text-sm px-3 py-1 rounded-full border border-white hover:bg-blue-700 transition-colors duration-200"
+      >
+        New Chat
+      </button>
     </header>
 
     <nav id="mobile-nav" class="mobile-nav" role="navigation">
-        <button id="close-nav-button" class="absolute top-4 right-4 text-gray-600 hover:text-gray-900 focus:outline-none p-1 rounded-full hover:bg-gray-300 transition-colors duration-200"
-                aria-label="Close navigation menu">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
-                <path d="M18 6 6 18"></path>
-                <path d="m6 6 12 12"></path>
+      <button
+        id="close-nav-button"
+        class="absolute top-4 right-4 text-gray-600 hover:text-gray-900 focus:outline-none p-1 rounded-full hover:bg-gray-300 transition-colors duration-200"
+        aria-label="Close navigation menu"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="h-6 w-6"
+        >
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>
+      <ul class="space-y-2 px-6 mt-4 w-full">
+        <li>
+          <a
+            href="{% url 'index' %}"
+            class="flex items-center space-x-3 py-2 px-3 rounded-lg text-gray-700 text-lg hover:bg-gray-300 transition-colors duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-bell"
+            >
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
             </svg>
-        </button>
-        <ul class="space-y-2 px-6 mt-4 w-full">
-            <li>
-                <a href="index.html" class="flex items-center space-x-3 py-2 px-3 rounded-lg text-gray-700 text-lg hover:bg-gray-300 transition-colors duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell">
-                        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
-                    </svg>
-                    <span>Emergency Report</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" class="flex items-center space-x-3 py-2 px-3 rounded-lg text-gray-900 text-lg font-semibold bg-blue-100 hover:bg-blue-200 transition-colors duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle ring-2 ring-blue-500 rounded-full p-0.5">
-                        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
-                    </svg>
-                    <span>Chatbot (Current)</span>
-                </a>
-            </li>
-            <li>
-                <a href="video-gallery.html" class="flex items-center space-x-3 py-2 px-3 rounded-lg text-gray-700 text-lg hover:bg-gray-300 transition-colors duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-video">
-                        <path d="m22 8-6 4 6 4V8Z"></path><rect width="14" height="12" x="1" y="6" rx="2" ry="2"></rect>
-                    </svg>
-                    <span>Video Gallery</span>
-                </a>
-            </li>
-        </ul>
+            <span>Emergency Report</span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-2 px-3 rounded-lg text-gray-900 text-lg font-semibold bg-blue-100 hover:bg-blue-200 transition-colors duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-message-circle ring-2 ring-blue-500 rounded-full p-0.5"
+            >
+              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+            </svg>
+            <span>Chatbot (Current)</span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="{% url 'video_gallery' %}"
+            class="flex items-center space-x-3 py-2 px-3 rounded-lg text-gray-700 text-lg hover:bg-gray-300 transition-colors duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-video"
+            >
+              <path d="m22 8-6 4 6 4V8Z"></path>
+              <rect width="14" height="12" x="1" y="6" rx="2" ry="2"></rect>
+            </svg>
+            <span>Video Gallery</span>
+          </a>
+        </li>
+      </ul>
     </nav>
 
-    <main class="flex flex-col items-center justify-center flex-grow mt-8 mb-8 w-full max-w-4xl">
-        <h2 class="text-3xl font-bold text-gray-800 mb-8">Emergency Chatbot</h2>
+    <main
+      class="flex flex-col items-center justify-center flex-grow mt-8 mb-8 w-full max-w-4xl"
+    >
+      <h2 class="text-3xl font-bold text-gray-800 mb-8">Emergency Chatbot</h2>
 
-        <div class="chat-container">
-            <div id="chat-messages" class="chat-messages">
-                </div>
-            <div class="chat-input-area">
-                <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
-                <button id="send-button">
-                    Send
-                    <span id="loading-spinner" class="loading-spinner hidden"></span>
-                </button>
-            </div>
-            <div id="quick-questions" class="quick-questions-container">
-                </div>
-            <button id="scroll-to-bottom-button" class="scroll-to-bottom-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down">
-                    <path d="M12 5v14"></path>
-                    <path d="m19 12-7 7-7-7"></path>
-                </svg>
-            </button>
+      <div class="chat-container">
+        <div id="chat-messages" class="chat-messages"></div>
+        <div class="chat-input-area">
+          <input
+            type="text"
+            id="user-input"
+            placeholder="Type your message..."
+            autocomplete="off"
+          />
+          <button id="send-button">
+            Send
+            <span id="loading-spinner" class="loading-spinner hidden"></span>
+          </button>
         </div>
+        <div id="quick-questions" class="quick-questions-container"></div>
+        <button id="scroll-to-bottom-button" class="scroll-to-bottom-button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-arrow-down"
+          >
+            <path d="M12 5v14"></path>
+            <path d="m19 12-7 7-7-7"></path>
+          </svg>
+        </button>
+      </div>
     </main>
 
-    <footer class="w-full max-w-4xl text-center text-gray-500 text-xs sm:text-sm py-8 mt-auto">
-        <p>Stay informed, stay safe with GuardianLink.</p>
+    <footer
+      class="w-full max-w-4xl text-center text-gray-500 text-xs sm:text-sm py-8 mt-auto"
+    >
+      <p>Stay informed, stay safe with GuardianLink.</p>
     </footer>
 
     <div id="message-box" class="message-box"></div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM Elements ---
-            const menuButton = document.getElementById('menu-button');
-            const mobileNav = document.getElementById('mobile-nav');
-            const closeNavButton = document.getElementById('close-nav-button');
-            const chatMessagesContainer = document.getElementById('chat-messages');
-            const userInput = document.getElementById('user-input');
-            const sendButton = document.getElementById('send-button');
-            const loadingSpinner = document.getElementById('loading-spinner');
-            const messageBox = document.getElementById('message-box');
-            const startNewChatButton = document.getElementById('start-new-chat-button');
-            const quickQuestionsContainer = document.getElementById('quick-questions');
-            const scrollToBottomButton = document.getElementById('scroll-to-bottom-button');
-
-            let messageBoxTimeout; // For clearing the message box
-
-            // --- Chat History (for Gemini API) ---
-            // Initial bot message with disclaimer
-            const initialBotMessage = "Hello! I'm GuardianLink's emergency chatbot. I can provide general information and advice on emergencies in Nigeria. **Please note: I cannot dispatch emergency services directly. For immediate help, use the 'Emergency Report' feature.** How can I assist you?";
-            let chatHistory = []; // Will be populated from localStorage or with initial message
-
-            const quickQuestions = [
-                "What is the general emergency number in Nigeria?",
-                "How to react during a fire incident?",
-                "What should I do in case of a road accident?",
-                "What are common flood safety tips in Nigeria?",
-                "How can I report a security incident?",
-                "What is NEMA and what do they do?",
-                "What is FRSC's role in emergencies?",
-                "What are the signs of a medical emergency?",
-                "How to perform basic first aid for cuts?",
-                "What to do during a building collapse?",
-                "How to prepare for a natural disaster?",
-                "What are the steps for a home evacuation plan?",
-                "Where can I find local emergency services contact information?",
-                "Tips for staying safe during civil unrest."
-            ];
-
-            // --- Helper Functions ---
-
-            // Function to display temporary messages (reused from main app)
-            function showMessage(message, type = 'info', duration = 3000) {
-                clearTimeout(messageBoxTimeout);
-                messageBox.textContent = message;
-                messageBox.className = `message-box show ${type}`;
-
-                messageBoxTimeout = setTimeout(() => {
-                    messageBox.classList.add('hide');
-                    messageBox.addEventListener('transitionend', function handler() {
-                        messageBox.classList.remove('show', 'hide', 'success', 'error', 'warning');
-                        messageBox.textContent = '';
-                        messageBox.removeEventListener('transitionend', handler);
-                    });
-                }, duration);
-            }
-
-            // Function to format timestamp
-            function formatTimestamp(date) {
-                const hours = date.getHours().toString().padStart(2, '0');
-                const minutes = date.getMinutes().toString().padStart(2, '0');
-                return `${hours}:${minutes}`;
-            }
-
-            // Function to add a message to the chat display
-            function addMessageToChat(content, sender, isTypingIndicator = false, isHtml = false) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', sender);
-
-                if (isTypingIndicator) {
-                    messageDiv.id = 'typing-indicator-message'; // Assign an ID to easily remove it
-                } else {
-                    const headerDiv = document.createElement('div');
-                    headerDiv.classList.add('message-header');
-                    const timestamp = formatTimestamp(new Date());
-                    headerDiv.textContent = `${sender === 'user' ? 'You' : 'Bot'} • ${timestamp}`;
-                    messageDiv.appendChild(headerDiv);
-                }
-
-                const bubbleDiv = document.createElement('div');
-                bubbleDiv.classList.add('message-bubble');
-
-                if (isTypingIndicator) {
-                    bubbleDiv.classList.add('typing-indicator');
-                    bubbleDiv.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-                } else {
-                    if (isHtml) {
-                        bubbleDiv.innerHTML = content; // Set as HTML
-                    } else {
-                        bubbleDiv.textContent = content; // Set as plain text
-                    }
-                }
-
-                messageDiv.appendChild(bubbleDiv);
-                chatMessagesContainer.appendChild(messageDiv);
-
-                // Scroll to the bottom of the chat
-                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-            }
-
-            // Function to remove the typing indicator
-            function removeTypingIndicator() {
-                const typingIndicator = document.getElementById('typing-indicator-message');
-                if (typingIndicator) {
-                    typingIndicator.remove();
-                }
-            }
-
-            // Basic Markdown to HTML converter for lists and bold text
-            function formatMarkdown(text) {
-                let formattedHtml = [];
-                const lines = text.split('\n');
-                let inUnorderedList = false;
-                let inOrderedList = false;
-
-                lines.forEach(line => {
-                    const trimmedLine = line.trim();
-
-                    // Handle bold: **text**
-                    let processedLine = trimmedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-                    // Check for unordered list item (Markdown: * item or - item)
-                    if (processedLine.startsWith('* ') || processedLine.startsWith('- ')) {
-                        if (!inUnorderedList) {
-                            if (inOrderedList) { formattedHtml.push('</ol>'); inOrderedList = false; }
-                            formattedHtml.push('<ul>');
-                            inUnorderedList = true;
-                        }
-                        const listItemContent = processedLine.substring(2).trim();
-                        formattedHtml.push(`<li>${listItemContent}</li>`);
-                    }
-                    // Check for ordered list item (Markdown: 1. item, 2. item)
-                    else if (processedLine.match(/^\d+\.\s/)) {
-                        if (!inOrderedList) {
-                            if (inUnorderedList) { formattedHtml.push('</ul>'); inUnorderedList = false; }
-                            formattedHtml.push('<ol>');
-                            inOrderedList = true;
-                        }
-                        const listItemContent = processedLine.replace(/^\d+\.\s/, '').trim();
-                        formattedHtml.push(`<li>${listItemContent}</li>`);
-                    }
-                    // Not a list item, or a paragraph
-                    else {
-                        if (inUnorderedList) { formattedHtml.push('</ul>'); inUnorderedList = false; }
-                        if (inOrderedList) { formattedHtml.push('</ol>'); inOrderedList = false; }
-                        if (processedLine !== '') { // Avoid empty paragraphs for empty lines
-                            formattedHtml.push(`<p>${processedLine}</p>`);
-                        }
-                    }
-                });
-
-                // Close any open lists at the end
-                if (inUnorderedList) { formattedHtml.push('</ul>'); }
-                if (inOrderedList) { formattedHtml.push('</ol>'); }
-
-                return formattedHtml.join('');
-            }
-
-            // Function to save chat history to local storage
-            function saveChatHistory() {
-                localStorage.setItem('guardianLinkChatHistory', JSON.stringify(chatHistory));
-            }
-
-            // Function to load chat history from local storage
-            function loadChatHistory() {
-                const savedHistory = localStorage.getItem('guardianLinkChatHistory');
-                if (savedHistory) {
-                    chatHistory = JSON.parse(savedHistory);
-                    chatHistory.forEach(msg => {
-                        // Re-render messages, applying markdown formatting for bot messages
-                        if (msg.role === 'user') {
-                            addMessageToChat(msg.parts[0].text, 'user');
-                        } else if (msg.role === 'model') {
-                            addMessageToChat(formatMarkdown(msg.parts[0].text), 'bot', false, true);
-                        }
-                    });
-                } else {
-                    // If no history, add the initial bot message
-                    addMessageToChat(formatMarkdown(initialBotMessage), 'bot', false, true);
-                    chatHistory.push({ role: "model", parts: [{ text: initialBotMessage }] });
-                    saveChatHistory(); // Save the initial message
-                }
-            }
-
-            // Function to clear chat history
-            function clearChat() {
-                chatHistory = [];
-                localStorage.removeItem('guardianLinkChatHistory');
-                chatMessagesContainer.innerHTML = ''; // Clear display
-                addMessageToChat(formatMarkdown(initialBotMessage), 'bot', false, true); // Add initial message
-                chatHistory.push({ role: "model", parts: [{ text: initialBotMessage }] });
-                saveChatHistory(); // Save the new initial message
-                showMessage('Chat history cleared. Starting a new conversation.', 'info');
-            }
-
-            // Function to populate quick question buttons
-            function populateQuickQuestions() {
-                quickQuestions.forEach(question => {
-                    const button = document.createElement('button');
-                    button.classList.add('quick-question-button');
-                    button.textContent = question;
-                    button.addEventListener('click', () => {
-                        userInput.value = question; // Set the input value
-                        sendMessageToGemini(); // Send the message
-                    });
-                    quickQuestionsContainer.appendChild(button);
-                });
-            }
-
-            // Function to send message to Gemini API
-            async function sendMessageToGemini() {
-                const userPrompt = userInput.value.trim();
-                if (userPrompt === '') {
-                    showMessage('Please type a message before sending.', 'warning');
-                    return;
-                }
-
-                // Add user message to chat history and display
-                addMessageToChat(userPrompt, 'user');
-                chatHistory.push({ role: "user", parts: [{ text: userPrompt }] });
-                saveChatHistory(); // Save history after user message
-                userInput.value = ''; // Clear input field
-
-                // Show loading indicator and disable input/button
-                sendButton.disabled = true;
-                loadingSpinner.classList.add('hidden');
-                userInput.placeholder = 'Thinking...';
-
-                // Add typing indicator
-                addMessageToChat('', 'bot', true);
-
-                try {
-                    const payload = { contents: chatHistory };
-                    // change this before deploying
-                    const apiKey = ""; 
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error.message || 'Unknown API error'}`);
-                    }
-
-                    const result = await response.json();
-
-                    let botResponseText = "I'm sorry, I couldn't generate a response at this time. There might be an issue with the AI. Please try again or rephrase your question.";
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        botResponseText = result.candidates[0].content.parts[0].text;
-                    } else {
-                        console.warn('Unexpected API response structure:', result);
-                        botResponseText = "I received an unexpected response from the AI. Please try again or ask a different question.";
-                    }
-
-                    // Remove typing indicator before adding the actual response
-                    removeTypingIndicator();
-
-                    // Add bot response to chat history and display
-                    addMessageToChat(formatMarkdown(botResponseText), 'bot', false, true); // Pass true for isHtml
-                    chatHistory.push({ role: "model", parts: [{ text: botResponseText }] }); // Store original text in history
-                    saveChatHistory(); // Save history after bot message
-
-                } catch (error) {
-                    console.error('Error calling Gemini API:', error);
-                    // Remove typing indicator even on error
-                    removeTypingIndicator();
-                    addMessageToChat(`Error: ${error.message}. Please try again or rephrase your question. If the problem persists, please check your internet connection.`, 'bot');
-                    showMessage('Failed to get a response from the chatbot. Please check your connection or try again later.', 'error');
-                } finally {
-                    // Hide loading indicator and re-enable input/button
-                    sendButton.disabled = false;
-                    loadingSpinner.classList.add('hidden');
-                    userInput.placeholder = 'Type your message...';
-                    userInput.focus(); // Keep focus on input
-                }
-            }
-
-            // --- Event Listeners ---
-
-            // Mobile Navigation Toggle
-            if (menuButton && mobileNav) {
-                menuButton.addEventListener('click', () => {
-                    mobileNav.classList.add('open');
-                    menuButton.setAttribute('aria-expanded', 'true');
-                });
-            }
-
-            if (closeNavButton && mobileNav) {
-                closeNavButton.addEventListener('click', () => {
-                    mobileNav.classList.remove('open');
-                    menuButton.setAttribute('aria-expanded', 'false');
-                });
-            }
-
-            // Start New Chat Button
-            if (startNewChatButton) {
-                startNewChatButton.addEventListener('click', clearChat);
-            }
-
-            // Send message on button click
-            sendButton.addEventListener('click', sendMessageToGemini);
-
-            // Send message on Enter key press
-            userInput.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') {
-                    sendMessageToGemini();
-                }
-            });
-
-            // Scroll to bottom button visibility and click
-            chatMessagesContainer.addEventListener('scroll', () => {
-                // Show button if not at the bottom
-                if (chatMessagesContainer.scrollHeight - chatMessagesContainer.scrollTop > chatMessagesContainer.clientHeight + 50) { // 50px buffer
-                    scrollToBottomButton.classList.add('show');
-                } else {
-                    scrollToBottomButton.classList.remove('show');
-                }
-            });
-
-            scrollToBottomButton.addEventListener('click', () => {
-                chatMessagesContainer.scrollTo({
-                    top: chatMessagesContainer.scrollHeight,
-                    behavior: 'smooth'
-                });
-            });
-
-            // Initial setup
-            loadChatHistory(); // Load chat history on page load
-            populateQuickQuestions(); // Populate quick question buttons
-            userInput.focus(); // Set initial focus on input
-        });
-    </script>
-</body>
+    <script src="{% static 'js/emergency reporting js/chat_bot.js'%}"></script>
+  </body>
 </html>
