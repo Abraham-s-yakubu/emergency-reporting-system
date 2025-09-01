@@ -6,3 +6,4 @@ urlpatterns = [
     path('chatbot/', views.chatbot_view, name='Chatbot'),
     path('video-gallery/', views.video_gallery_view, name='video_gallery'),
     ]
+    
