@@ -1,8 +1,15 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-
+from django.contrib.auth.models import AbstractUser
 # Get the custom user model defined in a previous response
 User = get_user_model()
+
+# Define the choices for the user's role
+ROLE_CHOICES = (
+    ('admin', 'Admin'),
+    ('editor', 'Editor'),
+    ('viewer', 'Viewer'),
+)
 
 class AccidentIncident(models.Model):
     """
@@ -293,3 +300,151 @@ class FireIncident(models.Model):
     
     class Meta:
         db_table = 'fire_incidents'        
+        
+class CustomUser(AbstractUser):
+    """
+    A custom user model to handle different user roles.
+    Inherits from AbstractUser to get all standard Django user features
+    like a secure password, email, and authentication methods.
+    """
+    role = models.CharField(
+        max_length=10,
+        choices=ROLE_CHOICES,
+        default='viewer',
+        help_text="Designates the user's role in the system."
+    )
+    # The `groups` and `user_permissions` fields are necessary for a custom user model
+    # that inherits from AbstractUser to function correctly.
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='custom_user_groups',
+        blank=True,
+        help_text=('The groups this user belongs to. A user will get all permissions '
+                   'granted to each of their groups.'),
+        verbose_name='groups'
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='custom_user_permissions',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions'
+    )
+
+    def __str__(self):
+        return self.username
+
+
+class AccidentMedia(models.Model):
+    """
+    Model to store image URLs related to an AccidentIncident.
+    The actual image file is stored on Supabase Storage.
+    """
+    incident = models.ForeignKey(
+        'AccidentIncident',
+        on_delete=models.CASCADE,
+        related_name='media',
+        help_text="The accident incident this image is associated with."
+    )
+    image_url = models.URLField(
+        max_length=500,  # A URL field is more appropriate for storing the public link.
+        help_text="The URL of the image file stored on Supabase Storage."
+    )
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The date and time the image was uploaded."
+    )
+
+    class Meta:
+        verbose_name_plural = "Accident Media"
+        
+    def __str__(self):
+        return f"Image for Accident Incident {self.incident.id}"
+
+class FireMedia(models.Model):
+    """
+    Model to store image URLs related to a FireIncident.
+    The actual image file is stored on Supabase Storage.
+    """
+    incident = models.ForeignKey(
+        'FireIncident',
+        on_delete=models.CASCADE,
+        related_name='media',
+        help_text="The fire incident this image is associated with."
+    )
+    image_url = models.URLField(
+        max_length=500,
+        help_text="The public URL of the image file from Supabase Storage."
+    )
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The date and time the image URL was saved."
+    )
+
+    class Meta:
+        verbose_name_plural = "Fire Media"
+        
+    def __str__(self):
+        return f"Image for Fire Incident {self.incident.id}"
+        
+class EmergencyVideo(models.Model):
+    """
+    Model to store information about educational and informational videos
+    related to both fire and accidents, sourced from YouTube.
+    """
+    
+    # Predefined choices for the video category
+    CATEGORY_CHOICES = [
+        # Fire-related categories
+        ('fire_medical', 'Fire: Medical'),
+        ('fire_preparedness', 'Fire: Preparedness'),
+        ('fire_prevention', 'Fire: Prevention'),
+        ('fire_responds', 'Fire: Responds'),
+        # Accident-related categories
+        ('accident_driving_safety', 'Accident: Driving Safety'),
+        ('accident_emergency_responds', 'Accident: Emergency Responds'),
+        ('accident_motorcycle_safety', 'Accident: Motorcycle Safety'),
+        ('accident_pedestrian_safety', 'Accident: Pedestrian Safety'),
+    ]
+    
+    # New field to distinguish the type of video
+    TYPE_CHOICES = [
+        ('fire', 'Fire'),
+        ('accident', 'Accident'),
+    ]
+
+    video_id = models.CharField(
+        max_length=50,
+        unique=True,
+        help_text="The unique YouTube video ID (e.g., dQw4w9WgXcQ) found in the video's URL."
+    )
+    title = models.CharField(
+        max_length=200,
+        help_text="The title of the video."
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="A brief description of the video content."
+    )
+    video_type = models.CharField(
+        max_length=10,
+        choices=TYPE_CHOICES,
+        help_text="The type of video: fire or accident."
+    )
+    category = models.CharField(
+        max_length=30,  # Increased max_length to accommodate longer category names
+        choices=CATEGORY_CHOICES,
+        help_text="The specific category of the video, such as medical or driving safety."
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The date and time the video was added to the database."
+    )
+    
+    class Meta:
+        verbose_name_plural = "Emergency Videos"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+        
