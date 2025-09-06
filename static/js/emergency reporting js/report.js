@@ -639,6 +639,7 @@ document.addEventListener("DOMContentLoaded", () => {
           longitude: currentLocationLon,
         };
         console.log("Report Sent:", reportData);
+        
         showMessage("Report sent successfully!", "success");
         // Delay hiding the modal to allow the success message to be seen
         setTimeout(() => {

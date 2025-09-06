@@ -372,9 +372,9 @@ class FireMedia(models.Model):
         related_name='media',
         help_text="The fire incident this image is associated with."
     )
-    image_url = models.URLField(
+     image_url = models.URLField(
         max_length=500,
-        help_text="The public URL of the image file from Supabase Storage."
+        help_text="The public URL of the image from Supabase Storage."
     )
     timestamp = models.DateTimeField(
         auto_now_add=True,
