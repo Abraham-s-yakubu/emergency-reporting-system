@@ -61,6 +61,7 @@ class AccidentIncident(models.Model):
 
     # Location and Time
     address = models.TextField(help_text="Full address of the incident.")
+    additional_info = models.TextField(blank=True, null=True)
     latitude = models.DecimalField(
         max_digits=9,
         decimal_places=6,
@@ -229,6 +230,8 @@ class FireIncident(models.Model):
     casualties = models.IntegerField(default=0, help_text="Total number of casualties (injured + fatalities).")
     number_of_injured = models.IntegerField(default=0, help_text="Number of people injured.")
     
+    additional_info = models.TextField(blank=True, null=True)
+    
     AREA_UNIT = 'sqm'
     area_affected = models.DecimalField(
         max_digits=10,
@@ -372,7 +375,7 @@ class FireMedia(models.Model):
         related_name='media',
         help_text="The fire incident this image is associated with."
     )
-     image_url = models.URLField(
+    image_url = models.URLField(
         max_length=500,
         help_text="The public URL of the image from Supabase Storage."
     )

@@ -618,35 +618,110 @@ document.addEventListener("DOMContentLoaded", () => {
     useCurrentLocationButton.addEventListener("click", getCurrentLocation);
   }
 
+  // // Send Report Button
+  // if (sendReportButton) {
+  //   sendReportButton.addEventListener("click", () => {
+  //     if (validateForm()) {
+  //       // Only proceed if form is valid
+  //       const reportData = {
+  //         mode: currentMode,
+  //         severity: incidentSeverity,
+  //         numInjured: numInjured,
+  //         incidentType: selectedIncidentType,
+  //         uploadedFiles: uploadedFiles.map((file) => ({
+  //           name: file.name,
+  //           type: file.type,
+  //           size: file.size,
+  //         })),
+  //         address: incidentAddressInput.value,
+  //         explanation: explanationTextarea.value,
+  //         latitude: currentLocationLat,
+  //         longitude: currentLocationLon,
+  //       };
+  //       console.log("Report Sent:", reportData);
+
+  //       showMessage("Report sent successfully!", "success");
+  //       // Delay hiding the modal to allow the success message to be seen
+  //       setTimeout(() => {
+  //         hideModal(reportModal);
+  //       }, 1000); // Adjust delay as needed (e.g., 1000ms = 1 second)
+  //     } else {
+  //       showMessage("Please fill in all required fields.", "error");
+  //     }
+  //   });
+  // }
+
   // Send Report Button
   if (sendReportButton) {
-    sendReportButton.addEventListener("click", () => {
+    sendReportButton.addEventListener("click", async () => {
+      // Collect all data from the form
+      const incidentType = document.querySelector(
+        "#incident-type-buttons .selected"
+      )?.dataset.incidentType;
+      const severity = document.querySelector("#severity-buttons .selected")
+        ?.dataset.severity;
+      const numInjured = document.getElementById("num-injured").value;
+      const explanation = explanationTextarea.value;
+      const incidentAddressInput = document.getElementById("incident-address");
+      const address = incidentAddressInput.value;
+
+      // Validate the form before proceeding
       if (validateForm()) {
-        // Only proceed if form is valid
-        const reportData = {
-          mode: currentMode,
-          severity: incidentSeverity,
-          numInjured: numInjured,
-          incidentType: selectedIncidentType,
-          uploadedFiles: uploadedFiles.map((file) => ({
-            name: file.name,
-            type: file.type,
-            size: file.size,
-          })),
-          address: incidentAddressInput.value,
-          explanation: explanationTextarea.value,
-          latitude: currentLocationLat,
-          longitude: currentLocationLon,
-        };
-        console.log("Report Sent:", reportData);
-        
-        showMessage("Report sent successfully!", "success");
-        // Delay hiding the modal to allow the success message to be seen
-        setTimeout(() => {
-          hideModal(reportModal);
-        }, 1000); // Adjust delay as needed (e.g., 1000ms = 1 second)
+        sendReportButton.disabled = true;
+        sendReportButton.textContent = "Sending...";
+
+        // 1. Package the data into a FormData object
+        const formData = new FormData();
+        formData.append("mode", currentMode);
+        formData.append("incident_type", incidentType);
+        formData.append("severity", severity);
+        formData.append("num_injured", numInjured);
+        formData.append("explanation", explanation);
+        formData.append("address", address);
+
+        // Append coordinates if available
+        if (currentLocationLat && currentLocationLon) {
+          formData.append("latitude", currentLocationLat);
+          formData.append("longitude", currentLocationLon);
+        }
+
+        // Append all uploaded files to the FormData object
+        const photoUploadInput = document.getElementById("photo-upload");
+        if (photoUploadInput && photoUploadInput.files.length > 0) {
+          for (const file of photoUploadInput.files) {
+            formData.append("incident_images", file);
+          }
+        }
+
+        // 2. Send the request with fetch()
+        try {
+          const response = await fetch("/submit-report/", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            showMessage(result.message, "success");
+            console.log("Report Sent:", result);
+            setTimeout(() => {
+              hideModal(reportModal);
+              // You might want to clear form fields here
+            }, 1000);
+          } else {
+            showMessage(result.message, "error");
+          }
+        } catch (error) {
+          console.error("Error sending report:", error);
+          showMessage("Failed to send report. Please try again.", "error");
+        } finally {
+          sendReportButton.disabled = false;
+          sendReportButton.textContent = "Send Report";
+        }
       } else {
         showMessage("Please fill in all required fields.", "error");
+        console.log("Form validation failed.");
       }
     });
   }
