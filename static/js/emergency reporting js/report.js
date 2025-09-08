@@ -181,6 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Function to populate incident type buttons in the modal
+  // Corrected Function to populate and handle Incident Type buttons
   function populateIncidentTypes() {
     if (incidentTypeButtonsContainer) {
       incidentTypeButtonsContainer.innerHTML = ""; // Clear existing buttons
@@ -205,6 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "hover:text-white"
         );
         button.innerHTML = `${type.icon}<span>${type.name}</span>`;
+        button.dataset.incidentType = type.name;
 
         button.addEventListener("click", () => {
           selectedIncidentType = type.name;
@@ -212,6 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .querySelectorAll("button")
             .forEach((btn) => {
               btn.classList.remove(
+                "selected",
                 "bg-red-600",
                 "border-red-600",
                 "bg-blue-600",
@@ -225,9 +228,15 @@ document.addEventListener("DOMContentLoaded", () => {
               );
             });
           if (currentMode === "fire") {
-            button.classList.add("bg-red-600", "border-red-600", "text-white");
+            button.classList.add(
+              "selected",
+              "bg-red-600",
+              "border-red-600",
+              "text-white"
+            );
           } else {
             button.classList.add(
+              "selected",
               "bg-blue-600",
               "border-blue-600",
               "text-white"
@@ -245,11 +254,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to populate severity buttons in the modal
+  // Corrected Function to populate and handle Severity buttons
   function populateSeverityTypes() {
     if (severityButtonsContainer) {
       severityButtonsContainer.innerHTML = ""; // Clear existing buttons
-      severityTypes.forEach((severity) => {
+
+      severityTypes.forEach((type) => {
         const button = document.createElement("button");
         button.classList.add(
           "flex",
@@ -269,18 +279,17 @@ document.addEventListener("DOMContentLoaded", () => {
           "hover:bg-gray-500",
           "hover:text-white"
         );
-        button.innerHTML = `${severity.icon}<span>${severity.name}</span>`;
+        button.innerHTML = `${type.icon}<span>${type.name}</span>`;
+        button.dataset.severity = type.name;
 
         button.addEventListener("click", () => {
-          incidentSeverity = severity.name;
+          incidentSeverity = type.name;
           severityButtonsContainer.querySelectorAll("button").forEach((btn) => {
             btn.classList.remove(
-              "bg-red-600",
-              "border-red-600",
-              "bg-orange-500",
-              "border-orange-500",
-              "bg-green-600",
-              "border-green-600",
+              "selected",
+              ...Object.values(severityTypes)
+                .map((t) => t.colorClass.split(" "))
+                .flat(),
               "text-white"
             );
             btn.classList.add(
@@ -289,8 +298,9 @@ document.addEventListener("DOMContentLoaded", () => {
               "text-gray-300"
             );
           });
-          const classesToAdd = severity.colorClass.split(" ");
-          button.classList.add(...classesToAdd, "text-white");
+
+          const classesToAdd = type.colorClass.split(" ");
+          button.classList.add("selected", ...classesToAdd, "text-white");
           button.classList.remove(
             "border-gray-600",
             "bg-gray-600",
@@ -686,12 +696,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Append all uploaded files to the FormData object
-        const photoUploadInput = document.getElementById("photo-upload");
-        if (photoUploadInput && photoUploadInput.files.length > 0) {
-          for (const file of photoUploadInput.files) {
-            formData.append("incident_images", file);
-          }
-        }
+        uploadedFiles.forEach((file) => {
+          formData.append("incident_images", file);
+          console.log("Appending file:", file);
+        });
 
         // 2. Send the request with fetch()
         try {

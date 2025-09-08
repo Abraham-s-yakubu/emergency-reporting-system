@@ -32,12 +32,12 @@ class AccidentIncident(models.Model):
     )
 
     SEVERITY_CHOICES = [
-        ('High', 'High'),
-        ('Medium', 'Medium'),
-        ('Low', 'Low'),
+        ('High Severity', 'High Severity'),
+        ('Medium Severity', 'Medium Severity'),
+        ('Low Severity', 'Low Severity'),
     ]
     severity_level = models.CharField(
-        max_length=10,
+        max_length=50,
         choices=SEVERITY_CHOICES,
         help_text="The severity of the accident."
     )
@@ -182,15 +182,16 @@ class FireIncident(models.Model):
     )
     
     SEVERITY_CHOICES = [
-        ('High', 'High'),
-        ('Medium', 'Medium'),
-        ('Low', 'Low'),
+        ('High Severity', 'High Severity'),
+        ('Medium Severity', 'Medium Severity'),
+        ('Low Severity', 'Low Severity'),
     ]
     severity_level = models.CharField(
-        max_length=10,
+        max_length=50,
         choices=SEVERITY_CHOICES,
-        help_text="The severity of the fire."
+        help_text="The severity of the accident."
     )
+
 
     STATUS_CHOICES = [
         ('Reported', 'Reported'),
@@ -339,41 +340,34 @@ class CustomUser(AbstractUser):
 
 
 class AccidentMedia(models.Model):
-    """
-    Model to store image URLs related to an AccidentIncident.
-    The actual image file is stored on Supabase Storage.
-    """
     incident = models.ForeignKey(
         'AccidentIncident',
         on_delete=models.CASCADE,
         related_name='media',
-        help_text="The accident incident this image is associated with."
+        help_text="The accident incident this media is associated with."
     )
     image_url = models.URLField(
-        max_length=500,  # A URL field is more appropriate for storing the public link.
+        max_length=500,
         help_text="The URL of the image file stored on Supabase Storage."
     )
     timestamp = models.DateTimeField(
         auto_now_add=True,
-        help_text="The date and time the image was uploaded."
+        help_text="The date and time the media was uploaded."
     )
 
     class Meta:
         verbose_name_plural = "Accident Media"
         
     def __str__(self):
-        return f"Image for Accident Incident {self.incident.id}"
+        return f"Media for Accident Incident {self.incident.id}"
+
 
 class FireMedia(models.Model):
-    """
-    Model to store image URLs related to a FireIncident.
-    The actual image file is stored on Supabase Storage.
-    """
     incident = models.ForeignKey(
         'FireIncident',
         on_delete=models.CASCADE,
         related_name='media',
-        help_text="The fire incident this image is associated with."
+        help_text="The fire incident this media is associated with."
     )
     image_url = models.URLField(
         max_length=500,
@@ -381,14 +375,14 @@ class FireMedia(models.Model):
     )
     timestamp = models.DateTimeField(
         auto_now_add=True,
-        help_text="The date and time the image URL was saved."
+        help_text="The date and time the media URL was saved."
     )
 
     class Meta:
         verbose_name_plural = "Fire Media"
         
     def __str__(self):
-        return f"Image for Fire Incident {self.incident.id}"
+        return f"Media for Fire Incident {self.incident.id}"
         
 class EmergencyVideo(models.Model):
     """
