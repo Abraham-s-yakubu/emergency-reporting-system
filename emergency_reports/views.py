@@ -24,7 +24,18 @@ def video_gallery_view(request):
     # For example: media_items = AccidentMedia.objects.filter(file_type__startswith='video')
     context = {}
     return render(request,  'emergency_reporting/video gallary.html', context)
-
+def fire_dashboard_main(request):
+    return render(request,'admin fire/fire_main_dashboard.html')
+def accident_dashboard_main(request):
+    return render(request,'admin frsc/accident_main_dashboard.html')
+def fire_map(request):
+    return render(request,'admin fire/fire map.html')
+def accident_report_management(request):
+    return render(request,'admin frsc/accident report management.html')
+def accident_analysis_and_trend(request):
+    return render(request,'admin frsc/accident analysis and trend.html')
+def accident_admin(request):
+    return render(request,'admin frsc/accident admin page.html')
 # @csrf_exempt
 # def submit_report(request):
 #     """

@@ -1,0 +1,185 @@
+ /*
+        ================================================================================
+        --- START GENERAL LAYOUT CSS (To be placed in your base.html) ---
+        This section contains styles for the main body, sidebar, top navigation,
+        and other reusable components that will appear on every page.
+        ================================================================================
+        */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+            overflow-x: hidden;
+        }
+
+        /* --- Sidebar Styles --- */
+        #sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 20rem; /* Expanded width */
+            transition: width 0.3s ease-in-out;
+            z-index: 50; 
+            overflow: hidden; /* Hide content that goes beyond width during transition */
+            background-color: #1a202c; /* Match body for unified look */
+        }
+        #sidebar.collapsed {
+            width: 5rem; /* Collapsed width */
+        }
+        #sidebar.collapsed .sidebar-text { 
+            opacity: 0;
+            transition: opacity 0.15s ease-out 0.1s; 
+        }
+        #sidebar .sidebar-text {
+            opacity: 1;
+            transition: opacity 0.15s ease-in 0.1s; 
+            white-space: nowrap; 
+        }
+        #sidebar.collapsed .justify-between .flex.items-center span { opacity: 0; }
+        #sidebar.collapsed .sidebar-item-icon { margin: auto; }
+        #sidebar .sidebar-item-icon { width: 1.25rem; text-align: center; margin-right: 0.75rem; }
+
+        /* Pin Button Icon Animation */
+        #sidebar-pin-btn i {
+            transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+        #sidebar-pin-btn.pinned i {
+            transform: rotate(45deg); 
+        }
+        
+        /* Main Content Wrapper Styles */
+        #main-content-wrapper {
+            transition: margin-left 0.3s ease-in-out;
+            min-width: 0; 
+            padding: 1.5rem;
+        }
+        
+        /* --- Reusable Top Navigation CSS START --- */
+        #main-header {
+            background-color: #152238; 
+            border-radius: 1.5rem; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 1.25rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        #main-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: -0.05em;
+        }
+        #main-header h1 span {
+            color: #3B82F6; /* Blue accent for the title */
+        }
+        .header-icon-button {
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            background-color: #2D3748;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            border: 2px solid transparent; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .header-icon-button:hover {
+            background-color: #4A5568;
+            transform: scale(1.05);
+        }
+        .header-icon-button.active {
+            border-color: #3B82F6; /* Blue border when active */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* Blue glow */
+        }
+        .header-icon-button svg {
+            width: 1.75rem;
+            height: 1.75rem;
+            color: #A0AEC0;
+        }
+        .profile-avatar {
+            width: 3rem;
+            height: 3rem;
+            background-color: #3B82F6; /* Blue avatar background */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .profile-text {
+            font-weight: 500;
+            color: #CBD5E1;
+        }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .dropdown-menu {
+            position: absolute;
+            background-color: #1E293B;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            min-width: 22rem;
+            max-height: 28rem;
+            overflow-y: auto;
+            animation: fadeInScale 0.25s ease-out forwards;
+            border: 1px solid #334155;
+            padding: 0.5rem;
+        }
+        .dropdown-menu.hidden { display: none; }
+        .header-dropdown { top: calc(100% + 0.75rem); right: 0; transform-origin: top right; }
+        .dropdown-header { padding: 1rem 1.25rem; border-bottom: 1px solid #334155; font-size: 1.125rem; font-weight: 600; color: #E0E7FF; }
+        .dropdown-close-button { background: none; border: none; cursor: pointer; color: #A0AEC0; transition: color 0.2s; }
+        .dropdown-close-button:hover { color: #E0E7FF; }
+        .notification-item { padding: 1rem 0.5rem; border-bottom: 1px solid #334155; cursor: pointer; transition: background-color 0.2s; border-radius: 0.75rem; margin: 0.25rem; display: flex; align-items: center; }
+        .notification-item:last-child { border-bottom: none; }
+        .notification-item:hover { background-color: #2D3748; }
+        .notification-item .icon-circle { width: 2.5rem; height: 2.5rem; border-radius: 50%; background-color: #3B82F6; /* Blue notification circle */ display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; margin-right: 1rem; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.15); color: white; }
+        .notification-item .content p { margin: 0; font-size: 0.9rem; line-height: 1.3; }
+        .notification-item .content .title { font-weight: 600; color: #F8FAFC; }
+        .notification-item .content .subtitle { color: #94A3B8; font-size: 0.8rem; }
+        .notification-item .content .time { color: #64748B; font-size: 0.7rem; margin-top: 0.25rem; }
+        .dropdown-footer { padding: 1rem 1.25rem; border-top: 1px solid #334155; text-align: center; }
+        .dropdown-footer a { color: #3B82F6; font-weight: 500; transition: color 0.2s; text-decoration: none; }
+        .dropdown-footer a:hover { color: #60A5FA; }
+
+        /* Sidebar Navigation Items Styling */
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0.5rem; 
+            border-radius: 0.75rem; 
+            color: #CBD5E1; 
+            transition: all 0.2s ease-in-out; 
+            text-decoration: none; 
+            margin-bottom: 0.5rem; 
+            overflow: hidden; 
+        }
+        .sidebar-nav-item:hover {
+            background-color: #2D3748; 
+            color: #F8FAFC; 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); 
+        }
+        /* Active Sidebar Navigation Item */
+        .sidebar-nav-item.active {
+            background: linear-gradient(135deg, #3B82F6, #2563EB); /* Blue gradient background */
+            color: white; 
+            font-weight: 600; 
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3); 
+            transform: translateY(-1px); 
+        }
+
+        /* --- General Modal Styles --- */
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .hidden { display: none; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /*
+        ================================================================================
+        --- END GENERAL LAYOUT CSS ---
+        ================================================================================
+        */

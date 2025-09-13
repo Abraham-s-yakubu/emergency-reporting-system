@@ -1,0 +1,1069 @@
+// Register the Chart.js Data Labels plugin globally
+        Chart.register(ChartDataLabels);
+
+        /**
+         * Helper function to get the day of the week abbreviation.
+         * @param {string} dateTimeString - ISO 8601 date-time string.
+         * @returns {string} Abbreviated day of the week (e.g., 'Sun', 'Mon').
+         */
+        function getDayOfWeekAbbr(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            return days[date.getDay()];
+        }
+
+        /**
+         * Helper function to categorize time of day into blocks.
+         * @param {string} dateTimeString - ISO 8601 date-time string.
+         * @returns {string} Time block (e.g., '08:00-10:00').
+         */
+        function getTimeOfDayBlock(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const hour = date.getHours();
+            if (hour >= 0 && hour < 4) return '0-4h';
+            if (hour >= 4 && hour < 8) return '4-8h';
+            if (hour >= 8 && hour < 10) return '8-10h';
+            if (hour >= 10 && hour < 12) return '10-12h';
+            if (hour >= 12 && hour < 14) return '12-14h';
+            if (hour >= 14 && hour < 16) return '14-16h';
+            if (hour >= 16 && hour < 18) return '16-18h';
+            if (hour >= 18 && hour < 20) return '18-20h';
+            if (hour >= 20 && hour < 22) return '20-22h';
+            if (hour >= 22 && hour <= 23) return '22-24h'; // Covers 22:00 to 23:59
+            return 'Unknown';
+        }
+
+        /**
+         * Helper function to determine the season based on the month for Adamawa State.
+         * Dry Season: November - March (often more speeding, dust-related issues)
+         * Rainy Season: April - October (more slippery roads, poor visibility)
+         * @param {string} dateTimeString - ISO 8601 date-time string.
+         * @returns {string} 'Dry' or 'Rainy'.
+         */
+        function getSeason(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const month = date.getMonth() + 1; // getMonth() returns 0-11
+            if (month >= 4 && month <= 10) { // April to October
+                return 'Rainy';
+            } else { // November to March
+                return 'Dry';
+            }
+        }
+
+        /**
+         * Generates a random integer within a specified range.
+         * @param {number} min - The minimum value (inclusive).
+         * @param {number} max - The maximum value (inclusive).
+         * @returns {number} A random integer.
+         */
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        /**
+         * Generates a realistic set of accident incidents for Adamawa State.
+         * This function creates a diverse dataset with varying locations, causes,
+         * severities, and seasonal distributions relevant to road accidents.
+         * @param {number} numAccidents - The desired number of accidents to generate.
+         * @returns {Array<Object>} An array of generated accident incident objects.
+         */
+        function generateRealisticAccidentIncidents(numAccidents) {
+            const accidents = [];
+            const locations = [
+                'Yola-Jimeta Highway (Urban)', 'Mubi-Mararaba Road (Rural)', 'Numan-Jalingo Road (Highway)',
+                'Yola Town Center (Urban)', 'Jimeta Bypass (Urban)', 'Ganye-Toungo Road (Rural)',
+                'Fufore Junction (Urban)', 'Mayo-Belwa Bridge (Highway)', 'Gombi Market Road (Urban)',
+                'Hong-Mubi Road (Rural)', 'Demsa-Numan Road (Highway)', 'Song Town (Urban)',
+                'Michika-Madagali Road (Rural)', 'Girei-Pariya Road (Rural)', 'Guyuk-Shelleng Road (Rural)'
+            ];
+            const causes = [
+                'Speeding', 'Distracted Driving', 'Drunk Driving', 'Road Defects',
+                'Mechanical Failure', 'Poor Visibility', 'Animal Crossing', 'Fatigue',
+                'Improper Overtaking', 'Tyre Burst', 'Brake Failure', 'Potholes'
+            ];
+            const severities = ['Minor', 'Moderate', 'Severe', 'Fatal'];
+            const statuses = ['Reported', 'Active', 'Closed'];
+            const vehicleTypes = ['Car', 'Motorcycle', 'Truck', 'Bus', 'Pedestrian', 'Tricycle'];
+            const roadConditions = ['Dry', 'Wet', 'Potholes', 'Dusty', 'Icy (rare)'];
+
+            const startYear = 2023;
+            const endYear = 2025;
+
+            for (let i = 0; i < numAccidents; i++) {
+                const year = getRandomInt(startYear, endYear);
+                const month = getRandomInt(1, 12);
+                const day = getRandomInt(1, 28); // Max 28 to avoid issues with Feb
+                const hour = getRandomInt(0, 23);
+                const minute = getRandomInt(0, 59);
+
+                // Adjust accident frequency based on season and time of day
+                let accidentCountMultiplier = 1;
+                const currentMonth = new Date(year, month - 1, day).getMonth() + 1;
+                const currentHour = new Date(year, month - 1, day, hour).getHours();
+
+                // More accidents in rainy season (April-Oct) due to wet roads
+                if (currentMonth >= 4 && currentMonth <= 10) {
+                    accidentCountMultiplier = getRandomInt(1, 3);
+                } else { // Dry season (Nov-Mar)
+                    accidentCountMultiplier = getRandomInt(0, 2);
+                }
+
+                // More accidents during rush hours or late night
+                if ((currentHour >= 17 && currentHour <= 19) || (currentHour >= 22 || currentHour <= 2)) {
+                    accidentCountMultiplier += getRandomInt(0, 1);
+                }
+
+                if (accidentCountMultiplier === 0 && accidents.length < numAccidents) {
+                    i--; // Decrement i to retry this iteration for a valid accident
+                    continue;
+                }
+
+                const dateTime = new Date(year, month - 1, day, hour, minute).toISOString().substring(0, 16); // YYYY-MM-DDTHH:MM
+
+                const cause = causes[getRandomInt(0, causes.length - 1)];
+                let severity = severities[getRandomInt(0, severities.length - 1)];
+                let responseTime = getRandomInt(10, 90); // 10 to 90 minutes for accidents
+                let vehiclesInvolved = getRandomInt(1, 5);
+                let fatalities = 0;
+                let injuredCount = 0;
+                let damageCost = getRandomInt(100000, 5000000); // Naira
+
+                // Make severity and impact more realistic based on cause and vehicle type
+                if (cause === 'Speeding' || cause === 'Drunk Driving' || cause === 'Improper Overtaking') {
+                    severity = 'Severe';
+                    responseTime = getRandomInt(15, 45);
+                    vehiclesInvolved = getRandomInt(2, 6);
+                    fatalities = getRandomInt(0, 3);
+                    injuredCount = getRandomInt(1, 10);
+                    damageCost = getRandomInt(1000000, 10000000);
+                } else if (cause === 'Road Defects' || cause === 'Potholes') {
+                    severity = getRandomInt(0, 1) === 0 ? 'Moderate' : 'Minor';
+                    responseTime = getRandomInt(10, 30);
+                    vehiclesInvolved = getRandomInt(1, 3);
+                    injuredCount = getRandomInt(0, 3);
+                    damageCost = getRandomInt(200000, 2000000);
+                } else if (cause === 'Poor Visibility' || cause === 'Animal Crossing') {
+                    severity = getRandomInt(0, 1) === 0 ? 'Moderate' : 'Minor';
+                    responseTime = getRandomInt(10, 25);
+                    vehiclesInvolved = getRandomInt(1, 2);
+                    injuredCount = getRandomInt(0, 2);
+                    damageCost = getRandomInt(100000, 1500000);
+                }
+
+                if (severity === 'Fatal') {
+                    fatalities = getRandomInt(1, 5);
+                    injuredCount = getRandomInt(2, 15);
+                    responseTime = getRandomInt(20, 60);
+                    damageCost = getRandomInt(5000000, 20000000);
+                }
+
+                const status = statuses[getRandomInt(0, statuses.length - 1)];
+                const location = locations[getRandomInt(0, locations.length - 1)];
+                const vehicleType = vehicleTypes[getRandomInt(0, vehicleTypes.length - 1)];
+                const roadCondition = roadConditions[getRandomInt(0, roadConditions.length - 1)];
+
+                accidents.push({
+                    id: `ACC-AD${(accidents.length + 1).toString().padStart(3, '0')}`,
+                    location: location,
+                    dateTime: dateTime,
+                    cause: cause,
+                    severity: severity,
+                    status: status,
+                    vehiclesInvolved: vehiclesInvolved,
+                    fatalities: fatalities,
+                    injuredCount: injuredCount,
+                    responseTime: responseTime,
+                    vehicleType: vehicleType,
+                    roadCondition: roadCondition,
+                    damageCost: damageCost,
+                    dayOfWeek: getDayOfWeekAbbr(dateTime),
+                    timeOfDay: getTimeOfDayBlock(dateTime),
+                    season: getSeason(dateTime)
+                });
+            }
+            return accidents;
+        }
+
+        // Generate 150 realistic accident incidents
+        const accidentIncidents = generateRealisticAccidentIncidents(150);
+
+
+        /**
+         * Generic function to create or update a Chart.js chart.
+         * It destroys any existing chart on the canvas before creating a new one,
+         * ensuring a clean slate and preventing rendering issues.
+         * @param {string} ctxId - The ID of the canvas element.
+         * @param {string} type - The type of chart (e.g., 'bar', 'line', 'doughnut').
+         * @param {Array} labels - Labels for the chart's data points.
+         * @param {Array} data - Data values for the chart.
+         * @param {string} label - Label for the dataset.
+         * @param {string|Array} backgroundColor - Background color(s) for the chart elements.
+         * @param {string|Array} borderColor - Border color(s) for the chart elements.
+         * @param {boolean} [fill=false] - Whether to fill the area under the line (for line charts).
+         * @param {number} [tension=0] - Line tension (for line charts, 0 for straight lines).
+         * @param {Array} [datasets=null] - Optional: provide full datasets array for multi-line charts or complex data.
+         * @param {boolean} [showDatalabels=true] - Whether to show datalabels on the chart.
+         * @param {number} [yAxisMax=null] - Optional: explicit max value for Y-axis.
+         */
+        function createChart(ctxId, type, labels, data, label, backgroundColor, borderColor, fill = false, tension = 0, datasets = null, showDatalabels = true, yAxisMax = null) {
+            const canvas = document.getElementById(ctxId);
+            if (!canvas) {
+                console.error(`Canvas element with ID '${ctxId}' not found.`);
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+
+            // Get the actual display size of the canvas's parent container
+            const parent = canvas.parentElement;
+            const computedStyle = getComputedStyle(parent);
+            const displayWidth = parseFloat(computedStyle.width);
+            const displayHeight = parseFloat(computedStyle.height);
+
+            // Set the canvas element's width and height attributes to match its display size
+            // multiplied by the device pixel ratio for sharper rendering
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = displayWidth * dpr;
+            canvas.height = displayHeight * dpr;
+
+            // Ensure the canvas is styled to fit its container
+            canvas.style.width = `${displayWidth}px`;
+            canvas.style.height = `${displayHeight}px`;
+
+            // If a chart already exists on this canvas, destroy it to prevent duplicates
+            if (Chart.getChart(ctxId)) {
+                Chart.getChart(ctxId).destroy();
+            }
+
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                devicePixelRatio: dpr, // Crucial for high-DPI screens
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ECECFF' /* Light blue-white for legend text */
+                        }
+                    },
+                    datalabels: {
+                        color: '#fff',
+                        font: {
+                            weight: 'bold'
+                        },
+                        display: showDatalabels // Control datalabel visibility
+                    },
+                    tooltip: {
+                        callbacks: {} // Initialize callbacks object for tooltips
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#ECECFF' /* Light blue-white for Y-axis labels */
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)' /* Light grid lines */
+                        },
+                        max: yAxisMax // Set max value if provided
+                    },
+                    x: {
+                        ticks: {
+                            color: '#ECECFF' /* Light blue-white for X-axis labels */
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            };
+
+            // Specific options for Doughnut chart
+            if (type === 'doughnut') {
+                chartOptions.plugins.datalabels.formatter = (value, context) => {
+                    const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(0) + '%' : '0%';
+                    return value > 0 ? `${value} (${percentage})` : '';
+                };
+                chartOptions.plugins.tooltip.callbacks.label = function(context) {
+                    let label = context.label || '';
+                    if (label) {
+                        label += ': ';
+                    }
+                    const value = context.raw;
+                    const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                    return `${label}${value} (${percentage}%)`;
+                };
+            }
+
+            // Specific options for Bar chart
+            if (type === 'bar') {
+                chartOptions.plugins.datalabels.anchor = 'end';
+                chartOptions.plugins.datalabels.align = 'top';
+                chartOptions.plugins.datalabels.formatter = (value) => value > 0 ? value : '';
+                // Optimize x-axis labels for long names (e.g., Top 10 Locations, Causes by Road Condition)
+                chartOptions.scales.x.ticks.autoSkip = true;
+                chartOptions.scales.x.ticks.maxRotation = 45; // Rotate labels if they are long
+                chartOptions.scales.x.ticks.minRotation = 0;
+            }
+
+            // Specific options for Line chart
+            if (type === 'line') {
+                chartOptions.plugins.datalabels.display = false; // Disable datalabels for line chart points by default
+                chartOptions.plugins.tooltip.callbacks.title = function(context) {
+                    const date = new Date(context[0].label);
+                    return date.toLocaleString('en-US', { year: 'numeric', month: 'long' });
+                };
+            }
+
+
+            new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: datasets || [{ // Use provided datasets or default
+                        label: label,
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
+                        borderWidth: 1,
+                        fill: fill,
+                        tension: tension,
+                        pointBackgroundColor: '#3B82F6', // Specific for line chart points (blue)
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        /**
+         * Updates the summary statistics displayed on the dashboard.
+         * This function processes the `accidentIncidents` data to calculate and display key metrics.
+         * @param {Array} incidents - The array of incidents to use for calculations.
+         */
+        function updateSummaryStatistics(accidents) {
+            document.getElementById('totalAccidents').textContent = accidents.length;
+            document.getElementById('activeAccidents').textContent = accidents.filter(i => i.status === 'Active').length;
+            document.getElementById('totalFatalities').textContent = accidents.reduce((sum, i) => sum + (i.fatalities || 0), 0);
+
+            const totalResponseTime = accidents.reduce((sum, i) => sum + (i.responseTime || 0), 0);
+            const avgResponseTime = accidents.length > 0 ? (totalResponseTime / accidents.length).toFixed(1) : 0;
+            document.getElementById('avgResponseTime').textContent = avgResponseTime;
+
+            const totalVehiclesInvolved = accidents.reduce((sum, i) => sum + (i.vehiclesInvolved || 0), 0);
+            const avgVehiclesInvolved = accidents.length > 0 ? (totalVehiclesInvolved / accidents.length).toFixed(1) : 0;
+            document.getElementById('avgVehiclesInvolved').textContent = avgVehiclesInvolved;
+
+            const causeCounts = accidents.reduce((acc, accident) => {
+                acc[accident.cause] = (acc[accident.cause] || 0) + 1;
+                return acc;
+            }, {});
+            const mostCommonCause = Object.keys(causeCounts).length > 0 ? Object.keys(causeCounts).reduce((a, b) => causeCounts[a] > causeCounts[b] ? a : b) : 'N/A';
+            document.getElementById('mostCommonCause').textContent = mostCommonCause;
+
+            const dayOfWeekCounts = accidents.reduce((acc, accident) => {
+                acc[accident.dayOfWeek] = (acc[accident.dayOfWeek] || 0) + 1;
+                return acc;
+            }, {});
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const mostReportsDay = days.length > 0 && Object.values(dayOfWeekCounts).some(v => v > 0) ? days.find(day => dayOfWeekCounts[day] === Math.max(...Object.values(dayOfWeekCounts))) : 'N/A';
+            document.getElementById('accidentsByDay').textContent = mostReportsDay;
+
+            const timeOfDayCounts = accidents.reduce((acc, accident) => {
+                acc[accident.timeOfDay] = (acc[accident.timeOfDay] || 0) + 1;
+                return acc;
+            }, {});
+            const timeBlocks = ['0-4h', '4-8h', '8-10h', '10-12h', '12-14h', '14-16h', '16-18h', '18-20h', '20-22h', '22-24h'];
+            const mostReportsHour = timeBlocks.length > 0 && Object.values(timeOfDayCounts).some(v => v > 0) ? timeBlocks.find(block => timeOfDayCounts[block] === Math.max(...Object.values(timeOfDayCounts))) : 'N/A';
+            document.getElementById('accidentsByHour').textContent = mostReportsHour;
+        }
+
+        /**
+         * Renders the 'Annual Accident Trend' line chart.
+         * This chart visualizes the number of accidents per year.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderAnnualReportTrendChart(accidents) {
+            const annualCounts = {};
+            accidents.forEach(accident => {
+                const year = new Date(accident.dateTime).getFullYear();
+                annualCounts[year] = (annualCounts[year] || 0) + 1;
+            });
+
+            const sortedYears = Object.keys(annualCounts).sort();
+            const data = sortedYears.map(year => annualCounts[year]);
+
+            const maxAnnualCount = Math.max(...data);
+            const yAxisMaxAnnual = maxAnnualCount > 0 ? Math.ceil(maxAnnualCount / 10) * 10 + 10 : 20;
+
+            createChart(
+                'annualReportTrendChart',
+                'line',
+                sortedYears,
+                data,
+                'Accidents',
+                'rgba(59, 130, 246, 0.2)', /* Light blue fill */
+                '#3B82F6', /* Blue line */
+                true, // fill
+                0.3, // tension
+                null, // datasets
+                false, // showDatalabels
+                yAxisMaxAnnual // yAxisMax
+            );
+        }
+
+        /**
+         * Renders the 'Accidents by Month' line chart.
+         * This chart shows the trend of incidents across months.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderMonthlyTrendsChart(accidents) {
+            const monthlyCounts = {};
+            accidents.forEach(accident => {
+                const date = new Date(accident.dateTime);
+                const yearMonth = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                monthlyCounts[yearMonth] = (monthlyCounts[yearMonth] || 0) + 1;
+            });
+
+            const sortedMonths = Object.keys(monthlyCounts).sort();
+            const data = sortedMonths.map(month => monthlyCounts[month]);
+
+            const maxMonthlyCount = Math.max(...data);
+            const yAxisMaxMonthly = maxMonthlyCount > 0 ? Math.ceil(maxMonthlyCount / 5) * 5 + 5 : 10;
+
+            createChart(
+                'monthlyTrendsChart',
+                'line',
+                sortedMonths,
+                data,
+                'Accidents',
+                'rgba(59, 130, 246, 0.2)', /* Light blue fill */
+                '#3B82F6', /* Blue line */
+                true, // fill
+                0.3, // tension
+                null, // datasets
+                false, // showDatalabels
+                yAxisMaxMonthly // yAxisMax
+            );
+        }
+
+        /**
+         * Renders the 'Top 10 Accident Locations' bar chart.
+         * This chart highlights areas with the highest number of reported incidents.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderTopLocationsChart(accidents) {
+            const locationCounts = accidents.reduce((acc, accident) => {
+                acc[accident.location] = (acc[accident.location] || 0) + 1;
+                return acc;
+            }, {});
+
+            const sortedLocations = Object.entries(locationCounts)
+                .sort(([, countA], [, countB]) => countB - countA)
+                .slice(0, 10); // Get top 10
+
+            const labels = sortedLocations.map(([location]) => {
+                const parts = location.split(' (')[0];
+                return parts.length > 20 ? parts.substring(0, 17) + '...' : parts;
+            });
+            const data = sortedLocations.map(([, count]) => count);
+            const backgroundColors = labels.map((_, i) => `rgba(${50 + i * 5}, ${150 + i * 5}, ${250 - i * 10}, 0.8)`);
+            const borderColors = labels.map((_, i) => `rgba(${50 + i * 5}, ${150 + i * 5}, ${250 - i * 10}, 1)`);
+
+            const maxLocationCount = Math.max(...data);
+            const yAxisMaxLocations = maxLocationCount > 0 ? Math.ceil(maxLocationCount / 5) * 5 + 5 : 10;
+
+            createChart('topLocationsChart', 'bar', labels, data, 'Accidents', backgroundColors, borderColors, false, 0, null, true, yAxisMaxLocations);
+        }
+
+        /**
+         * Renders the 'Accidents by Day of Week' bar chart.
+         * This chart helps identify patterns in incidents based on the day of the week.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderDayOfWeekChart(accidents) {
+            const dayOfWeekCounts = { 'Sun': 0, 'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0 };
+            accidents.forEach(accident => {
+                dayOfWeekCounts[accident.dayOfWeek]++;
+            });
+
+            const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const data = labels.map(day => dayOfWeekCounts[day] || 0);
+            const backgroundColors = labels.map((_, i) => `rgba(${0 + i * 5}, ${100 + i * 10}, ${200 + i * 5}, 0.8)`);
+            const borderColors = labels.map((_, i) => `rgba(${0 + i * 5}, ${100 + i * 10}, ${200 + i * 5}, 1)`);
+
+            const maxDayCount = Math.max(...data);
+            const yAxisMaxDay = maxDayCount > 0 ? Math.ceil(maxDayCount / 5) * 5 + 5 : 10;
+
+            createChart('dayOfWeekChart', 'bar', labels, data, 'Accidents', backgroundColors, borderColors, false, 0, null, true, yAxisMaxDay);
+        }
+
+        /**
+         * Renders the 'Accidents by Time of Day' bar chart.
+         * This chart reveals peak hours for accident incidents.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderTimeOfDayChart(accidents) {
+            const timeOfDayCounts = {
+                '0-4h': 0, '4-8h': 0, '8-10h': 0, '10-12h': 0, '12-14h': 0,
+                '14-16h': 0, '16-18h': 0, '18-20h': 0, '20-22h': 0, '22-24h': 0
+            };
+            accidents.forEach(accident => {
+                timeOfDayCounts[accident.timeOfDay]++;
+            });
+
+            const labels = ['0-4h', '4-8h', '8-10h', '10-12h', '12-14h', '14-16h', '16-18h', '18-20h', '20-22h', '22-24h'];
+            const data = labels.map(block => timeOfDayCounts[block] || 0);
+            const backgroundColors = labels.map((_, i) => `rgba(${0 + i * 7}, ${120 + i * 3}, ${220 + i * 5}, 0.8)`);
+            const borderColors = labels.map((_, i) => `rgba(${0 + i * 7}, ${120 + i * 3}, ${220 + i * 5}, 1)`);
+
+            const maxTimeCount = Math.max(...data);
+            const yAxisMaxTime = maxTimeCount > 0 ? Math.ceil(maxTimeCount / 5) * 5 + 5 : 10;
+
+            createChart('timeOfDayChart', 'bar', labels, data, 'Accidents', backgroundColors, borderColors, false, 0, null, true, yAxisMaxTime);
+        }
+
+        /**
+         * Renders the 'Seasonal Accident Trend' bar chart.
+         * This chart helps understand how accident incidents vary by season.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderSeasonalTrendChart(accidents) {
+            const seasonalCounts = { 'Dry': 0, 'Rainy': 0 };
+            accidents.forEach(accident => {
+                seasonalCounts[accident.season]++;
+            });
+
+            const labels = ['Dry', 'Rainy'];
+            const data = labels.map(season => seasonalCounts[season] || 0);
+            const backgroundColors = ['rgba(59, 130, 246, 0.8)', 'rgba(23, 190, 207, 0.8)']; // Blue for Dry, Cyan for Rainy
+            const borderColors = ['rgba(59, 130, 246, 1)', 'rgba(23, 190, 207, 1)'];
+
+            const maxSeasonalCount = Math.max(...data);
+            const yAxisMaxSeasonal = maxSeasonalCount > 0 ? Math.ceil(maxSeasonalCount / 10) * 10 + 10 : 20;
+
+            createChart('seasonalTrendChart', 'bar', labels, data, 'Accidents', backgroundColors, borderColors, false, 0, null, true, yAxisMaxSeasonal);
+        }
+
+        /**
+         * Renders the 'Average Response Time by Severity' bar chart.
+         * This chart shows the efficiency of response based on incident severity.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderResponseTimeBySeverityChart(accidents) {
+            const severityResponseTimes = {
+                'Fatal': { sum: 0, count: 0 },
+                'Severe': { sum: 0, count: 0 },
+                'Moderate': { sum: 0, count: 0 },
+                'Minor': { sum: 0, count: 0 }
+            };
+            accidents.forEach(accident => {
+                if (accident.responseTime !== undefined && accident.responseTime !== null) {
+                    severityResponseTimes[accident.severity].sum += accident.responseTime;
+                    severityResponseTimes[accident.severity].count++;
+                }
+            });
+
+            const labels = ['Fatal', 'Severe', 'Moderate', 'Minor'];
+            const data = labels.map(severity =>
+                severityResponseTimes[severity].count > 0 ? (severityResponseTimes[severity].sum / severityResponseTimes[severity].count).toFixed(1) : 0
+            );
+
+            const maxResponseTime = Math.max(...data.map(Number));
+            const yAxisMax = maxResponseTime > 0 ? Math.ceil(maxResponseTime / 10) * 10 + 10 : 20; // Increased padding for higher response times
+
+            const backgroundColors = [
+                'rgba(220, 38, 38, 0.8)', /* Fatal - Red */
+                'rgba(249, 115, 22, 0.8)', /* Severe - Orange */
+                'rgba(250, 204, 21, 0.8)', /* Moderate - Yellow */
+                'rgba(34, 197, 94, 0.8)'   /* Minor - Green */
+            ];
+            const borderColors = [
+                'rgba(220, 38, 38, 1)',
+                'rgba(249, 115, 22, 1)',
+                'rgba(250, 204, 21, 1)',
+                'rgba(34, 197, 94, 1)'
+            ];
+
+            createChart('responseTimeBySeverityChart', 'bar', labels, data, 'Avg. Time (min)', backgroundColors, borderColors, false, 0, null, true, yAxisMax);
+        }
+
+        /**
+         * Renders the 'Accident Causes by Road Condition' stacked bar chart.
+         * This chart provides insights into common causes across different road conditions.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderCausesByRoadConditionChart(accidents) {
+            const roadConditions = ['Dry', 'Wet', 'Potholes', 'Dusty', 'Icy (rare)'];
+            const causes = ['Speeding', 'Distracted Driving', 'Drunk Driving', 'Road Defects', 'Mechanical Failure', 'Poor Visibility', 'Animal Crossing', 'Fatigue', 'Improper Overtaking', 'Tyre Burst', 'Brake Failure'];
+
+            const datasets = [];
+            const backgroundColors = [
+                'rgba(30, 144, 255, 0.8)',  // Dodger Blue
+                'rgba(0, 191, 255, 0.8)',   // Deep Sky Blue
+                'rgba(65, 105, 225, 0.8)',  // Royal Blue
+                'rgba(70, 130, 180, 0.8)',  // Steel Blue
+                'rgba(95, 158, 160, 0.8)',  // Cadet Blue
+                'rgba(100, 149, 237, 0.8)', // Cornflower Blue
+                'rgba(135, 206, 235, 0.8)', // Sky Blue
+                'rgba(173, 216, 230, 0.8)', // Light Blue
+                'rgba(0, 206, 209, 0.8)',   // Dark Cyan
+                'rgba(0, 139, 139, 0.8)',   // Dark Cyan (darker)
+                'rgba(32, 178, 170, 0.8)'   // Light Sea Green
+            ];
+
+            causes.forEach((cause, causeIndex) => {
+                const dataForCause = roadConditions.map(condition => {
+                    return accidents.filter(acc => acc.cause === cause && acc.roadCondition === condition).length;
+                });
+
+                datasets.push({
+                    label: cause,
+                    data: dataForCause,
+                    backgroundColor: backgroundColors[causeIndex % backgroundColors.length],
+                    borderColor: backgroundColors[causeIndex % backgroundColors.length].replace('0.8', '1'),
+                    borderWidth: 1
+                });
+            });
+
+            let maxYValue = 0;
+            if (datasets.length > 0) {
+                const sumsByRoadCondition = new Array(roadConditions.length).fill(0);
+                datasets.forEach(dataset => {
+                    dataset.data.forEach((value, index) => {
+                        sumsByRoadCondition[index] += value;
+                    });
+                });
+                maxYValue = Math.max(...sumsByRoadCondition);
+            }
+            const yAxisMaxCausesByRoadCondition = maxYValue > 0 ? Math.ceil(maxYValue / 10) * 10 + 10 : 20;
+
+            createChart(
+                'causesByRoadConditionChart',
+                'bar',
+                roadConditions,
+                null,
+                null,
+                null,
+                null,
+                false,
+                0,
+                datasets,
+                false, // Do not show datalabels for stacked bar by default
+                yAxisMaxCausesByRoadCondition // yAxisMax
+            );
+
+            const chart = Chart.getChart('causesByRoadConditionChart');
+            if (chart) {
+                chart.options.scales.x.stacked = true;
+                chart.options.scales.y.stacked = true;
+                chart.options.plugins.tooltip.mode = 'index';
+                chart.options.plugins.tooltip.intersect = false;
+                chart.update();
+            }
+        }
+
+        /**
+         * Renders the 'Response Time Distribution' bar chart.
+         * This chart visualizes how response times are distributed across different bins.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderResponseTimeDistributionChart(accidents) {
+            const responseTimeBins = {
+                '0-15 min': 0,
+                '16-30 min': 0,
+                '31-45 min': 0,
+                '46-60 min': 0,
+                '60+ min': 0
+            };
+
+            accidents.forEach(accident => {
+                const rt = accident.responseTime;
+                if (rt !== undefined && rt !== null) {
+                    if (rt <= 15) responseTimeBins['0-15 min']++;
+                    else if (rt <= 30) responseTimeBins['16-30 min']++;
+                    else if (rt <= 45) responseTimeBins['31-45 min']++;
+                    else if (rt <= 60) responseTimeBins['46-60 min']++;
+                    else responseTimeBins['60+ min']++;
+                }
+            });
+
+            const labels = Object.keys(responseTimeBins);
+            const data = Object.values(responseTimeBins);
+            const backgroundColors = labels.map((_, i) => `rgba(${0 + i * 20}, ${150 - i * 10}, ${255 - i * 20}, 0.8)`);
+            const borderColors = labels.map((_, i) => `rgba(${0 + i * 20}, ${150 - i * 10}, ${255 - i * 20}, 1)`);
+
+            const maxDistributionCount = Math.max(...data);
+            const yAxisMaxDistribution = maxDistributionCount > 0 ? Math.ceil(maxDistributionCount / 5) * 5 + 5 : 10;
+
+            createChart('responseTimeDistributionChart', 'bar', labels, data, 'Accidents', backgroundColors, borderColors, false, 0, null, true, yAxisMaxDistribution);
+        }
+
+        /**
+         * Renders the 'Accidents by Vehicle Type' pie chart.
+         * This chart shows the distribution of accidents across different vehicle categories.
+         * @param {Array} incidents - The array of incidents to visualize.
+         */
+        function renderVehicleTypeBreakdownChart(accidents) {
+            const vehicleTypeCounts = accidents.reduce((acc, accident) => {
+                acc[accident.vehicleType] = (acc[accident.vehicleType] || 0) + 1;
+                return acc;
+            }, {});
+
+            const labels = Object.keys(vehicleTypeCounts);
+            const data = Object.values(vehicleTypeCounts);
+            const backgroundColors = [
+                'rgba(54, 162, 235, 0.8)',  // Blue (Car)
+                'rgba(255, 99, 132, 0.8)',  // Red (Motorcycle - often high risk)
+                'rgba(75, 192, 192, 0.8)',  // Green (Truck)
+                'rgba(153, 102, 255, 0.8)', // Purple (Bus)
+                'rgba(255, 159, 64, 0.8)',  // Orange (Pedestrian)
+                'rgba(201, 203, 207, 0.8)'  // Grey (Tricycle)
+            ];
+            const borderColors = backgroundColors.map(color => color.replace('0.8', '1'));
+
+            createChart('vehicleTypeBreakdownChart', 'doughnut', labels, data, 'Accidents', backgroundColors, borderColors);
+        }
+
+
+        /**
+         * Main function to update all dashboard components based on the provided incident data.
+         * This function orchestrates the rendering of all summary statistics and charts.
+         * @param {Array} incidentsToDisplay - The array of incidents to use for rendering.
+         */
+        function updateDashboard(accidentsToDisplay) {
+            updateSummaryStatistics(accidentsToDisplay);
+            renderAnnualReportTrendChart(accidentsToDisplay);
+            renderMonthlyTrendsChart(accidentsToDisplay);
+            renderTopLocationsChart(accidentsToDisplay);
+            renderDayOfWeekChart(accidentsToDisplay);
+            renderTimeOfDayChart(accidentsToDisplay);
+            renderSeasonalTrendChart(accidentsToDisplay);
+            renderResponseTimeBySeverityChart(accidentsToDisplay);
+            renderCausesByRoadConditionChart(accidentsToDisplay);
+            renderResponseTimeDistributionChart(accidentsToDisplay);
+            renderVehicleTypeBreakdownChart(accidentsToDisplay);
+        }
+
+        /**
+         * Converts an array of JavaScript objects into a CSV (Comma Separated Values) string.
+         * This is useful for exporting tabular data.
+         * @param {Array<Object>} data - The array of objects to convert. Each object should have consistent keys.
+         * @returns {string} The CSV string, including headers and quoted values.
+         */
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+
+            // Extract headers from the first object's keys
+            const headers = Object.keys(data[0]);
+            const csvRows = [];
+
+            // Add the header row to the CSV
+            csvRows.push(headers.join(','));
+
+            // Iterate over each data row and format its values for CSV
+            for (const row of data) {
+                const values = headers.map(header => {
+                    // Ensure values are strings and escape any double quotes by doubling them
+                    const escaped = ('' + row[header]).replace(/"/g, '""');
+                    // Wrap values in double quotes to handle commas within data fields
+                    return `"${escaped}"`;
+                });
+                csvRows.push(values.join(','));
+            }
+
+            // Join all rows with newline characters to form the complete CSV string
+            return csvRows.join('\n');
+        }
+
+        /**
+         * Triggers the download of a file to the user's browser.
+         * This function creates a Blob from the content and initiates a download.
+         * @param {string} content - The content of the file (e.g., CSV string, base64 image data).
+         * @param {string} filename - The desired name of the file (e.g., 'data.csv', 'chart.png').
+         * @param {string} mimeType - The MIME type of the file (e.g., 'text/csv', 'image/png').
+         */
+        function downloadFile(content, filename, mimeType) {
+            // Create a Blob object from the content with the specified MIME type
+            const blob = new Blob([content], { type: mimeType });
+            // Create a URL for the Blob object
+            const url = URL.createObjectURL(blob);
+            // Create a temporary anchor (<a>) element
+            const a = document.createElement('a');
+            // Set the href of the anchor to the Blob URL
+            a.href = url;
+            // Set the download attribute to the desired filename, which prompts a download
+            a.download = filename;
+            // Append the anchor to the document body (necessary for Firefox)
+            document.body.appendChild(a);
+            // Programmatically click the anchor to trigger the download
+            a.click();
+            // Remove the temporary anchor from the document body
+            document.body.removeChild(a);
+            // Revoke the Blob URL to free up resources
+            URL.revokeObjectURL(url);
+        }
+
+        /**
+         * Exports all current accident incidents data (from `accidentIncidents` array) to a CSV file.
+         * This function is triggered by the "Export All Data (CSV)" button.
+         */
+        function exportDataToCSV() {
+            // Convert the JavaScript array of incident objects into a CSV string
+            const csvContent = convertToCSV(accidentIncidents);
+            // Initiate the download of the CSV file
+            downloadFile(csvContent, 'accident_incidents_data.csv', 'text/csv');
+            // Show a custom alert to confirm the export
+            showCustomAlert('All incident data has been exported to CSV.', 'Export Successful');
+        }
+
+        /**
+         * Exports all Chart.js charts displayed on the dashboard as PNG images.
+         * This function iterates through all canvas elements within '.chart-wrapper' and exports them.
+         * It's triggered by the "Export Charts (PNG)" button.
+         */
+        function exportChartsToPNG() {
+            // Select all canvas elements that are used for Chart.js charts
+            const chartCanvases = document.querySelectorAll('.chart-wrapper canvas');
+            if (chartCanvases.length === 0) {
+                // If no charts are found, inform the user
+                showCustomAlert('No charts found to export.', 'Export Failed');
+                return;
+            }
+
+            // Iterate over each chart canvas
+            chartCanvases.forEach((canvas, index) => {
+                try {
+                    // Get the Chart.js instance associated with the canvas
+                    const chart = Chart.getChart(canvas.id);
+                    if (chart) {
+                        // Get the chart's content as a base64 encoded PNG image data URL
+                        const dataURL = chart.toBase64Image();
+                        // Construct a filename based on the canvas ID
+                        const filename = `${canvas.id}_chart.png`;
+                        // Create a temporary anchor element to trigger the download
+                        const a = document.createElement('a');
+                        a.href = dataURL;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    } else {
+                        // Log a warning if a Chart.js instance isn't found for a canvas
+                        console.warn(`Chart instance not found for canvas ID: ${canvas.id}. Skipping export.`);
+                    }
+                } catch (error) {
+                    // Catch and log any errors during the export process for a specific chart
+                    console.error(`Error exporting chart ${canvas.id}:`, error);
+                    showCustomAlert(`Failed to export chart ${canvas.id}. Please try again.`, 'Export Error');
+                }
+            });
+            // Show a custom alert to confirm the overall chart export
+            showCustomAlert('All charts have been exported as PNG images.', 'Export Successful');
+        }
+
+        /**
+         * Opens the custom report generation modal and populates its filters.
+         */
+        function generateCustomReport() {
+            const customReportModal = document.getElementById('customReportModal');
+            customReportModal.classList.remove('hidden');
+            populateReportFilters(); // Populate location dropdown
+        }
+
+        /**
+         * Populates the location filter dropdown in the custom report modal
+         * with unique locations from the accident incidents data.
+         */
+        function populateReportFilters() {
+            const locationFilter = document.getElementById('reportLocationFilter');
+            // Clear existing options, keep "All Locations"
+            locationFilter.innerHTML = '<option value="all">All Locations</option>';
+
+            const uniqueLocations = new Set();
+            accidentIncidents.forEach(accident => {
+                uniqueLocations.add(accident.location);
+            });
+
+            Array.from(uniqueLocations).sort().forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationFilter.appendChild(option);
+            });
+        }
+
+
+        /**
+         * Processes the custom report generation based on selected filters and format.
+         * This function is triggered when the "Generate Report" button in the modal is clicked.
+         */
+        function processReportGeneration(event) {
+            event.preventDefault(); // Prevent form default submission
+
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const severityFilter = document.getElementById('reportSeverityFilter').value;
+            const locationFilter = document.getElementById('reportLocationFilter').value;
+            const format = document.getElementById('reportFormat').value;
+
+            // Filter incidents based on selected criteria
+            const filteredIncidents = accidentIncidents.filter(incident => {
+                const incidentDate = new Date(incident.dateTime);
+                const startDateTime = startDate ? new Date(startDate) : null;
+                const endDateTime = endDate ? new Date(endDate) : null;
+
+                const matchesDate = (!startDateTime || incidentDate >= startDateTime) &&
+                                    (!endDateTime || incidentDate <= endDateTime);
+                const matchesSeverity = severityFilter === 'all' || incident.severity === severityFilter;
+                const matchesLocation = locationFilter === 'all' || incident.location === locationFilter;
+
+                return matchesDate && matchesSeverity && matchesLocation;
+            });
+
+            let reportContent = '';
+            let filename = 'custom_accident_report';
+            let mimeType = '';
+
+            if (format === 'csv') {
+                reportContent = convertToCSV(filteredIncidents);
+                filename += '.csv';
+                mimeType = 'text/csv';
+            } else if (format === 'pdf_summary') {
+                reportContent = generatePdfSummary(filteredIncidents, {
+                    startDate, endDate, severityFilter, locationFilter
+                });
+                filename += '.txt'; // Using .txt for a simple text-based summary
+                mimeType = 'text/plain';
+            }
+
+            if (filteredIncidents.length > 0) {
+                downloadFile(reportContent, filename, mimeType);
+                showCustomAlert(`Custom report generated successfully as ${filename}!`, 'Report Generated');
+            } else {
+                showCustomAlert('No accidents found matching your selected criteria for the report.', 'No Data');
+            }
+
+            document.getElementById('customReportModal').classList.add('hidden'); // Close the modal
+        }
+
+        /**
+         * Generates a text-based summary resembling a PDF report.
+         * This includes key statistics and a list of filtered incidents.
+         * @param {Array<Object>} incidents - The filtered accident incidents.
+         * @param {Object} filters - The filters applied to generate this report.
+         * @returns {string} A formatted text summary.
+         */
+        function generatePdfSummary(incidents, filters) {
+            let summary = `Accident Analytics Report - Adamawa State\n`;
+            summary += `Generated On: ${new Date().toLocaleString()}\n\n`;
+
+            summary += `--- Report Parameters ---\n`;
+            summary += `Date Range: ${filters.startDate || 'All Time'} to ${filters.endDate || 'All Time'}\n`;
+            summary += `Severity: ${filters.severityFilter}\n`;
+            summary += `Location: ${filters.locationFilter}\n\n`;
+
+            summary += `--- Summary Statistics ---\n`;
+            summary += `Total Accidents: ${incidents.length}\n`;
+            summary += `Total Fatalities: ${incidents.reduce((sum, i) => sum + (i.fatalities || 0), 0)}\n`;
+            summary += `Total Injuries: ${incidents.reduce((sum, i) => sum + (i.injuredCount || 0), 0)}\n`;
+
+            const uniqueCauses = [...new Set(incidents.map(i => i.cause))];
+            summary += `Unique Causes: ${uniqueCauses.join(', ') || 'N/A'}\n`;
+
+            const avgResponseTime = incidents.length > 0 ? (incidents.reduce((sum, i) => sum + (i.responseTime || 0), 0) / incidents.length).toFixed(1) : '0';
+            summary += `Average Response Time: ${avgResponseTime} minutes\n\n`;
+
+            summary += `--- Incident Details (First 10, if available) ---\n`;
+            if (incidents.length === 0) {
+                summary += "No incidents to display.\n";
+            } else {
+                incidents.slice(0, 10).forEach((incident, index) => {
+                    summary += `\nIncident #${index + 1}\n`;
+                    summary += `  ID: ${incident.id}\n`;
+                    summary += `  Location: ${incident.location}\n`;
+                    summary += `  Date/Time: ${new Date(incident.dateTime).toLocaleString()}\n`;
+                    summary += `  Cause: ${incident.cause}\n`;
+                    summary += `  Severity: ${incident.severity}\n`;
+                    summary += `  Status: ${incident.status}\n`;
+                    summary += `  Fatalities: ${incident.fatalities}\n`;
+                    summary += `  Injuries: ${incident.injuredCount}\n`;
+                });
+                if (incidents.length > 10) {
+                    summary += `\n... and ${incidents.length - 10} more incidents.\n`;
+                }
+            }
+
+            summary += `\n--- End of Report ---\n`;
+            return summary;
+        }
+
+
+        /**
+         * Displays a custom alert message as a modal overlay.
+         * This replaces browser's native `alert()` for better UI consistency and control.
+         * @param {string} message - The main message content to display.
+         * @param {string} title - The title for the alert modal.
+         */
+        function showCustomAlert(message, title = 'Alert') {
+            const customAlert = document.createElement('div');
+            // Apply Tailwind classes for fixed positioning, overlay background, centering, and high z-index
+            customAlert.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[999]';
+            customAlert.innerHTML = `
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-white">
+                    <h3 class="text-xl font-semibold mb-3">${title}</h3>
+                    <p>${message}</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700" onclick="this.closest('.fixed').remove()">OK</button>
+                </div>
+            `;
+            document.body.appendChild(customAlert);
+        }
+
+
+        // --- Event Listener for initial setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // In a real Django application, you would fetch data here:
+            /*
+            fetch('/api/accident_incidents/') // Replace with your actual Django API endpoint
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const processedData = data.map(incident => ({
+                        ...incident,
+                        dayOfWeek: getDayOfWeekAbbr(incident.dateTime),
+                        timeOfDay: getTimeOfDayBlock(incident.dateTime),
+                        season: getSeason(incident.dateTime)
+                    }));
+                    updateDashboard(processedData);
+                })
+                .catch(error => {
+                    console.error('Error fetching accident incidents data:', error);
+                    showCustomAlert('Failed to load accident incident data. Please try again later.', 'Data Load Error');
+                    updateDashboard([]);
+                });
+            */
+            // For now, using the hardcoded `accidentIncidents` array:
+            updateDashboard(accidentIncidents);
+
+            // Attach event listeners for Data Export buttons
+            document.getElementById('exportCsvBtn').addEventListener('click', exportDataToCSV);
+            document.getElementById('exportPngBtn').addEventListener('click', exportChartsToPNG);
+            document.getElementById('customReportBtn').addEventListener('click', generateCustomReport); // Now opens the modal
+
+            // Attach event listener for the custom report generation form submission
+            document.getElementById('reportGenerationForm').addEventListener('submit', processReportGeneration);
+
+
+            // Re-render charts on window resize to maintain sharpness and responsiveness
+            window.addEventListener('resize', () => updateDashboard(accidentIncidents));
+        });
