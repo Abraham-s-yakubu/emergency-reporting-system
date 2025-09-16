@@ -10,15 +10,14 @@ Admin frsc Users Management
 {% endblock %}
 {% block content %}
 <body>
-
+    {% block page_title %}
+	<h1>Accident Dashboard <span>Admin page</span></h1>
+	{% endblock %}
     <div class="max-w-7xl mx-auto py-8">
         <!-- Header and Back to Dashboard Link -->
         <div class="flex items-center justify-between mb-6">
             <h1 class="text-3xl font-extrabold text-blue-400">Admin Users Management</h1>
             <!-- Django Integration: This link might point to a dashboard URL defined in Django's urls.py -->
-            <a href="#" class="text-blue-400 hover:text-blue-300 text-sm flex items-center">
-                <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
-            </a>
         </div>
 
         <!-- Main Dashboard Card for User Management -->

@@ -1,15 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time Accident Map</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
-</head>
+{% extends "admin frsc/accident_main_dashboard.html" %} 
+{% load static %} 
+{% block title%}
+    Real-time Accident Map
+{% endblock title %}
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/admin css/accident css/accident map.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol-ext@4.0.0/dist/ol-ext.min.css">
+{% endblock extra_css %}
+{% block content %}
 <body class="antialiased">
-    <div class="container">
+    <div class="container ">
         <!-- Main content area, including the map and details panel -->
         <div class="main-content">
             <div class="map-area">
@@ -419,9 +421,11 @@
             </div>
         </div>
     </div>
+    {% endblock %} 
+{% block extra_js %}
 
-
+<script src="{% static 'js/admin js/accident js/accident map.js'%}"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol-ext@4.0.0/dist/ol-ext.min.js"></script>
+{% endblock extra_js %}
 </body>
-</html>

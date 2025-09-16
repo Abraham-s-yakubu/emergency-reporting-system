@@ -7,10 +7,11 @@ urlpatterns = [
     path('video-gallery/', views.video_gallery_view, name='video_gallery'),
     path('submit-report/', views.submit_report, name='submit_report'),
     path('fire-dashboard/', views.fire_dashboard_main, name='fire_dashboard_main'),
-    path('accident-dashboard/', views.accident_dashboard_main, name='accient_dashboard_main'),
     path('fire-map/', views.fire_map, name='fire_map'),
+    path('accident-map/', views.accident_map, name='accident_map'),
+    path('accident-dashboard/', views.accident_dashboard_main, name='accident_dashboard_main'),
     path('accident-report-management/', views.accident_report_management, name='accident_report_management'),
     path('accident-analysis-and-trend/', views.accident_analysis_and_trend, name='accident_analysis_and_trend'),
     path('accident-admin/', views.accident_admin, name='accident_admin'),
     ]
-    
+        

@@ -30,6 +30,8 @@ def accident_dashboard_main(request):
     return render(request,'admin frsc/accident_main_dashboard.html')
 def fire_map(request):
     return render(request,'admin fire/fire map.html')
+def accident_map(request):
+    return render(request,'admin frsc/accident map.html')
 def accident_report_management(request):
     return render(request,'admin frsc/accident report management.html')
 def accident_analysis_and_trend(request):

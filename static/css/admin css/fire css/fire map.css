@@ -1,16 +1,3 @@
-#main-content,
-.container,
-.main-content,
-.map-area {
-	height: 100%;
-	padding: 0;
-	display: flex;
-	flex-direction: column;
-	flex-grow: 1;
-}
-#map {
-	flex-grow: 1;
-}
 
 /* Base styles for the entire page */
 body {
@@ -35,6 +22,13 @@ body {
 	display: flex;
 	gap: 1.5rem;
 	overflow: hidden; /* Ensure content within is scrollable if needed */
+}
+#main-content-wrapper {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	overflow: hidden; /* Prevent overflow */
 }
 
 .map-area {

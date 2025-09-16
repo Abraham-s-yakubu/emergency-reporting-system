@@ -26,86 +26,418 @@ Real-time Fire Map
 
 {% endblock %} 
 {% block content %}
+<body class="antialiased">
+    <div class="container">
+        <!-- Main content area, including the map and details panel -->
+        <div class="main-content">
+            <div class="map-area">
+                <div id="map" class="rounded-xl">
+                    <!-- Popup for displaying brief incident info on map hover -->
+                    <div id="popup" class="ol-popup">
+                        <a href="#" id="popup-closer" class="ol-popup-closer">x</a>
+                        <div id="popup-content"></div>
+                    </div>
 
-<!-- FIX: Removed the incorrect <body> tag -->
+                    <!-- Drawing controls for adding points, lines, polygons to the map -->
+                    <div id="drawingControls" class="absolute top-6 left-6 flex flex-col gap-3">
+                        <button id="drawPointBtn" title="Draw Point">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.5 7.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm4.5 1.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button id="drawLineBtn" title="Draw Line">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button id="drawPolygonBtn" title="Draw Polygon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-3.5-7.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm4.5 1.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" clip-rule="evenodd" />
+                        </svg>
+                        </button>
+                        <button id="clearDrawingsBtn" title="Clear All Drawings">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
 
-<div class="container">
-	<!-- Main content area, including the map and details panel -->
-	<div class="main-content">
-		<div class="map-area">
-			<div id="map" class="rounded-xl">
-				<!-- Popup for displaying brief incident info on map hover -->
-				<div id="popup" class="ol-popup">
-					<a href="#" id="popup-closer" class="ol-popup-closer">x</a>
-					<div id="popup-content"></div>
-				</div>
-				<!-- Drawing controls for adding points, lines, polygons to the map -->
-				<div
-					id="drawingControls"
-					class="absolute top-6 left-6 flex flex-col gap-3"
-				>
-					<button id="drawPointBtn" title="Draw Point">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-6 w-6"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.5 7.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm4.5 1.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					</button>
-					<button id="drawLineBtn" title="Draw Line">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-6 w-6"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					</button>
-					<button id="drawPolygonBtn" title="Draw Polygon">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-6 w-6"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M10 18a8 8 0 100-16 8 8 0 000 16zm-3.5-7.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm4.5 1.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					</button>
-					<button id="clearDrawingsBtn" title="Clear All Drawings">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-6 w-6"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					</button>
-				</div>
-				<!-- ... rest of your map HTML ... -->
-			</div>
-		</div>
-	</div>
-</div>
+                    <!-- Layer switcher controls for changing the base map layer -->
+                    <div id="layerSwitcher" class="absolute top-6 right-6 flex flex-col gap-3">
+                        <button id="osmLayerBtn" class="active" title="Standard Map Layer">Standard Map</button>
+                        <button id="satelliteLayerBtn" title="Satellite Layer">Satellite</button>
+                        <button id="terrainLayerBtn" title="Terrain Map Layer">Terrain Map</button>
+                    </div>
+
+                    <!-- Map interaction controls like zoom, locate, and fullscreen -->
+                    <div id="mapInteractionControls" class="absolute bottom-6 left-6 flex flex-col gap-3">
+                        <button id="zoomInBtn" title="Zoom In">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </button>
+                        <button id="zoomOutBtn" title="Zoom Out">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+                            </svg>
+                        </button>
+                        <button id="locateMeBtn" title="Locate Me">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </button>
+                        <button id="fullscreenBtn" title="Toggle Fullscreen">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5v4m0-4h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Incident Details Panel - slides in from the right when an incident is selected -->
+            <div id="incidentDetailsPanel" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-white">Incident Details</h2>
+                    <button id="closeDetailsPanel" class="modal-close-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-4 text-red-100 flex-grow text-base">
+                    <div>
+                        <p class="font-semibold text-red-200">Report ID:</p>
+                        <p id="detailReportId" class="text-white font-bold text-lg"></p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-red-200">Location:</p>
+                        <p id="detailLocation"></p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-red-200">Date/Time:</p>
+                        <p id="detailDateTime"></p>
+                    </div>
+                    <div>
+                        <label for="detailCause" class="font-semibold text-red-200 block mb-1">Cause:</label>
+                        <input type="text" id="detailCause" class="detail-input" disabled>
+                    </div>
+                    <div>
+                        <label for="detailSeverity" class="font-semibold text-red-200 block mb-1">Severity:</label>
+                        <select id="detailSeverity" class="detail-select" disabled>
+                            <option value="Critical">Critical</option>
+                            <option value="Serious">Serious</option>
+                            <option value="Minor">Minor</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="detailStatus" class="font-semibold text-red-200 block mb-1">Status:</label>
+                        <select id="detailStatus" class="detail-select" disabled>
+                            <option value="Reported">Reported</option>
+                            <option value="Active">Active</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="detailAreaAffected" class="font-semibold text-red-200 block mb-1">Area Affected (sqm):</label>
+                        <input type="number" id="detailAreaAffected" class="detail-input" min="0" disabled>
+                    </div>
+                    <div>
+                        <label for="detailCasualties" class="font-semibold text-red-200 block mb-1">Casualties:</label>
+                        <input type="number" id="detailCasualties" class="detail-input" min="0" disabled>
+                    </div>
+                    <div>
+                        <label for="detailInjuries" class="font-semibold text-red-200 block mb-1">Injuries:</label>
+                        <input type="number" id="detailInjuries" class="detail-input" min="0" disabled>
+                    </div>
+                    <div>
+                        <label for="detailResponseTime" class="font-semibold text-red-200 block mb-1">Response Time (min):</label>
+                        <input type="number" id="detailResponseTime" class="detail-input" min="0" disabled>
+                    </div>
+                    <div>
+                        <label for="detailDescription" class="font-semibold text-red-200 block mb-1">Description:</label>
+                        <textarea id="detailDescription" class="detail-textarea h-20" disabled></textarea>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-red-200">Attached Media:</p>
+                        <div id="detailMedia" class="grid grid-cols-2 gap-3 mt-2">
+                            </div>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-red-200">Admin Log:</p>
+                        <div id="detailAdminLog" class="bg-red-900 p-3 rounded-lg text-xs max-h-24 overflow-y-auto border border-red-800"></div>
+                    </div>
+                    <div>
+                        <label for="detailInternalNotes" class="font-semibold text-red-200 block mb-1">Internal Notes:</label>
+                        <textarea id="detailInternalNotes" class="detail-textarea h-20" disabled></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button id="editIncidentBtn" class="btn-secondary">Edit Details</button>
+                    <button id="updateIncidentBtn" class="btn-primary hidden">Update Incident</button>
+                    <button id="cancelEditBtn" class="btn-secondary hidden">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Filters Panel -->
+    <div id="mapFiltersPanel" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-white">Map Filters</h2>
+            <button id="closeFiltersPanel" class="modal-close-button">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div class="flex flex-col gap-2">
+                <label for="statusFilter" class="text-red-100 text-sm font-medium">Status:</label>
+                <select id="statusFilter" class="filter-control">
+                    <option value="all">All</option>
+                    <option value="Reported">Reported</option>
+                    <option value="Active">Active</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="severityFilter" class="text-red-100 text-sm font-medium">Severity:</label>
+                <select id="severityFilter" class="filter-control">
+                    <option value="all">All</option>
+                    <option value="Critical">Critical</option>
+                    <option value="Serious">Serious</option>
+                    <option value="Minor">Minor</option>
+                </select>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="timeRangeFilter" class="text-red-100 text-sm font-medium">Time:</label>
+                <select id="timeRangeFilter" class="filter-control">
+                    <option value="all">All Time</option>
+                    <option value="last_hour">Last Hour</option>
+                    <option value="last_24_hours">Last 24 Hours</option>
+                    <option value="last_7_days">Last 7 Days</option>
+                </select>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="searchBar" class="text-red-100 text-sm font-medium">Search:</label>
+                <input type="text" id="searchBar" placeholder="Location or ID..." class="filter-control">
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom control bar for global actions -->
+    <div class="bottom-control-bar">
+        <button id="openFiltersPanelBtn" class="control-button">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01.293.707l3 3A1 1 0 0121 14v5a1 1 0 01-1 1H4a1 1 0 01-1-1v-5a1 1 0 01.293-.707l3-3A1 1 0 016 6.586V4z" />
+            </svg>
+            <span>Map Filters</span>
+        </button>
+        <button id="viewAllIncidentsBtn" class="btn-primary flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <span>View All Incidents</span>
+        </button>
+    </div>
+
+    <!-- Notification Preferences Modal (can be triggered by other means if needed) -->
+    <div id="notificationPreferencesModal" class="modal hidden">
+        <div class="modal-content w-full md:w-2/3 lg:w-1/3">
+            <button class="modal-close-button" onclick="closeAllPopups();">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 class="modal-title">Notification Preferences</h2>
+            <div class="space-y-5">
+                <div>
+                    <label class="modal-checkbox-label">
+                        <input type="checkbox" id="notifyCriticalSeverity" class="form-checkbox" checked>
+                        <span class="ml-3">New Critical Severity Incident Alerts</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="modal-checkbox-label">
+                        <input type="checkbox" id="notifySeriousSeverity" class="form-checkbox">
+                        <span class="ml-3">New Serious Severity Incident Alerts</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="modal-checkbox-label">
+                        <input type="checkbox" id="notifyMinorSeverity" class="form-checkbox">
+                        <span class="ml-3">New Minor Severity Incident Alerts</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="modal-checkbox-label">
+                        <input type="checkbox" id="notifyDuplicateFlags" class="form-checkbox" checked>
+                        <span class="ml-3">AI Duplicate Report Flags</span>
+                    </label>
+                </div>
+                <div class="mt-6">
+                    <p class="font-semibold text-red-200 mb-3">Sound Alerts:</p>
+                    <label class="modal-checkbox-label">
+                        <input type="checkbox" id="enableSoundAlerts" class="form-checkbox">
+                        <span class="ml-3">Enable Sound Notifications</span>
+                    </label>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-end">
+                <button id="saveNotificationPreferences" class="btn-primary">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full-screen Modal for All Incidents Table -->
+    <div id="allIncidentsModal" class="modal hidden">
+        <div class="modal-content w-full h-full flex flex-col">
+            <div class="modal-header flex justify-between items-center flex-wrap">
+                <h2 class="modal-title mb-4 sm:mb-0">All Fire Incidents</h2>
+                <div class="filter-group w-full md:w-auto">
+                    <div class="filter-item">
+                        <label for="modalStatusFilter">Status:</label>
+                        <select id="modalStatusFilter" class="filter-control">
+                            <option value="all">All</option>
+                            <option value="Reported">Reported</option>
+                            <option value="Active">Active</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="modalSeverityFilter">Severity:</label>
+                        <select id="modalSeverityFilter" class="filter-control">
+                            <option value="all">All</option>
+                            <option value="Critical">Critical</option>
+                            <option value="Serious">Serious</option>
+                            <option value="Minor">Minor</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="modalTimeRangeFilter">Time:</label>
+                        <select id="modalTimeRangeFilter" class="filter-control">
+                            <option value="all">All Time</option>
+                            <option value="last_hour">Last Hour</option>
+                            <option value="last_24_hours">Last 24 Hours</option>
+                            <option value="last_7_days">Last 7 Days</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="modalYearFilter">Year:</label>
+                        <select id="modalYearFilter" class="filter-control">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="modalMonthFilter">Month:</label>
+                        <select id="modalMonthFilter" class="filter-control">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="modalDayFilter">Day:</label>
+                        <select id="modalDayFilter" class="filter-control">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-item flex-grow search-item">
+                        <label for="modalSearchBar">Search:</label>
+                        <input type="text" id="modalSearchBar" placeholder="Location or ID..." class="filter-control">
+                    </div>
+                    <button id="applyModalFiltersBtn" class="btn-primary">Apply Filters</button>
+                </div>
+                <button class="modal-close-button" onclick="closeAllPopups();">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Location</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Date/Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allIncidentsTableBody">
+                        <!-- Incident rows will be dynamically populated here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <p class="text-red-200">Total Incidents: <span id="totalIncidentsCount">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- New: Single Incident Details Modal (appears on top of All Incidents Modal) -->
+    <div id="singleIncidentDetailsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header flex justify-between items-center">
+                <h2 class="modal-title" id="singleDetailReportId">Incident Details</h2>
+                <button class="modal-close-button" onclick="closeAllPopups('allIncidentsModal');">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-3 text-red-100 text-sm">
+                <div class="detail-field">
+                    <strong>Location:</strong> <span id="singleDetailLocation"></span>
+                </div>
+                <div class="detail-field">
+                    <strong>Date/Time:</strong> <span id="singleDetailDateTime"></span>
+                </div>
+                <div class="detail-field">
+                    <strong>Cause:</strong> <span id="singleDetailCause"></span>
+                </div>
+                <div class="detail-field">
+                    <strong>Severity:</strong> <span id="singleDetailSeverity"></span>
+                </div>
+                <div class="detail-field">
+                    <strong>Status:</strong> <span id="singleDetailStatus"></span>
+                </div>
+                <div class="detail-field">
+                    <strong>Area Affected:</strong> <span id="singleDetailAreaAffected"></span> sqm
+                </div>
+                <div class="detail-field">
+                    <strong>Casualties:</strong> <span id="singleDetailCasualties"></span>
+                </div>
+                <div class="detail-field">
+                    <strong>Injuries:</strong> <span id="singleDetailInjuries"></span>
+                </div>
+                <div class="detail-field">
+                    <strong>Response Time:</strong> <span id="singleDetailResponseTime"></span> min
+                </div>
+                <div class="detail-field">
+                    <strong>Description:</strong> <span id="singleDetailDescription"></span>
+                </div>
+                <div class="detail-field">
+                    <strong>Admin Log:</strong> <div id="singleDetailAdminLog" class="bg-red-900 p-2 rounded-md text-xs max-h-20 overflow-y-auto border border-red-800 mt-1"></div>
+                </div>
+                <div class="detail-field">
+                    <strong>Internal Notes:</strong> <span id="singleDetailInternalNotes"></span>
+                </div>
+                <div class="detail-field">
+                    <strong>Attached Media:</strong>
+                    <div id="singleDetailMedia" class="media-container">
+                        <!-- Media will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="singleDetailViewOnMapBtn" class="btn-primary-small">View on Map</button>
+            </div>
+        </div>
+    </div>
+
 {% endblock %} 
 {% block extra_js %}
 
@@ -116,3 +448,4 @@ Real-time Fire Map
 	<script src="{% static 'js/admin js/fire js/fire map.js'%}"></script>
 
 	{% endblock %}
+</body>

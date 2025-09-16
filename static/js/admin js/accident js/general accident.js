@@ -72,7 +72,8 @@
 			},
 		],
 	};
-	// --- Sidebar Logic ---
+
+	let isSidebarPinned = false;
 	const sidebar = {
 		expandedWidth: "20rem",
 		collapsedWidth: "5rem",

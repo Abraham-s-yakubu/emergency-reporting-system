@@ -59,16 +59,9 @@ body {
 
 /* Main Content Wrapper Styles */
 #main-content-wrapper {
-	/* transition: margin-left 0.3s ease-in-out;
-            min-width: 0; 
-            padding: 1.5rem; */
 	transition: margin-left 0.3s ease-in-out;
 	min-width: 0;
-	/* FIX: Make this a flex column to manage header and main content height */
-	display: flex;
-	flex-direction: column;
-	/* FIX: Remove padding from the wrapper. It will be applied to the content block instead. */
-	height: 100vh; /* Ensure the wrapper takes full viewport height */
+	padding: 1.5rem;
 }
 
 /* --- Reusable Top Navigation CSS START --- */
