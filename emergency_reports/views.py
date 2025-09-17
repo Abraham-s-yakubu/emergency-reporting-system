@@ -32,10 +32,17 @@ def fire_map(request):
     return render(request,'admin fire/fire map.html')
 def accident_map(request):
     return render(request,'admin frsc/accident map.html')
+def fire_report_management(request):
+    return render(request,'admin fire/Fire Report Management.html')
 def accident_report_management(request):
     return render(request,'admin frsc/accident report management.html')
+def fire_analysis_and_trend(request):
+    return render(request,'admin fire/fire analysis and trend.html')
 def accident_analysis_and_trend(request):
     return render(request,'admin frsc/accident analysis and trend.html')
+
+def fire_admin(request):
+    return render(request,'admin fire/fire admin page.html')
 def accident_admin(request):
     return render(request,'admin frsc/accident admin page.html')
 # @csrf_exempt

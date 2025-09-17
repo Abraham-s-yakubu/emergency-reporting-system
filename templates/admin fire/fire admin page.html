@@ -1,17 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Users Management</title>
-    
-    <!-- Tailwind CSS CDN for utility-first styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts - Inter for consistent typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons (e.g., plus, edit, trash) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
+{% extends "admin fire/fire_main_dashboard.html" %} 
+{% load static %} 
+{% block title%}
+Admin Users Management
+{% endblock %} 
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link
+	rel="stylesheet"
+	href="{% static 'css/admin css/fire css/fire admin.css' %}"
+/>
+{% endblock %} 
+{% block content %}
 <body>
 
     <div class="max-w-7xl mx-auto py-8">
@@ -139,5 +139,10 @@
             </div>
         </div>
     </div>
+    {% endblock %} 
+{% block extra_js %}
+<script src="{% static 'js/admin js/fire js/fire admin.js'%}"defer></script>
+{% endblock %}    
 </body>
-</html>
+
+

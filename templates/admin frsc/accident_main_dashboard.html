@@ -17,6 +17,7 @@
 		{% endblock %}
 		<!-- Tailwind CSS CDN -->
 		<script src="https://cdn.tailwindcss.com"></script>
+			<script src="{% static 'js/admin js/accident js/general accident.js'%}"defer></script>
 		<!-- Inter Font -->
 		<link
 			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -28,6 +29,7 @@
 			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
 		/>
 		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+		<script src="{% static 'js/admin js/accident js/general accident.js'%}"defer></script>
 	</head>
 	<body class="flex min-h-screen">
 		<!-- 
@@ -705,9 +707,9 @@
     --- END GENERAL MODALS ---
     ================================================================================
     -->
-		<script src="{% static 'js/admin js/accident js/general accident.js'%}"></script>
+		
 		{% block extra_js %}
-		<script src="{% static 'js/admin js/accident js/accident main dashboard.js'%}"></script>
+		<script src="{% static 'js/admin js/accident js/accident main dashboard.js'%}"defer></script>
 		{% endblock %}
 	</body>
 </html>

@@ -1,16 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fire Analytics & Trends Dashboard - Adamawa State</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Chart.js for data visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <!-- Chart.js Data Labels Plugin for displaying values on bars/pies -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-</head>
+{% extends "admin fire/fire_main_dashboard.html" %} 
+{% load static %} 
+{% block title%}
+Fire Analytics and Trends Dashboard 
+{% endblock %}
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link
+    rel="stylesheet"
+    href="{% static 'css/admin css/fire css/fire analytics and trend.css' %}"
+/>
+{% endblock %}
+{% block content %}
 <body class="antialiased">
     <div class="dashboard-container">
         <!-- Main Content Area -->
@@ -260,4 +260,7 @@
         </div>
     </div>
 </body>
-</html>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/admin js/fire js/fire analytics and trend.js'%}"></script>
+{% endblock %}
