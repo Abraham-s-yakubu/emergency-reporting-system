@@ -15,9 +15,6 @@
 			href="{% static 'css/admin css/accident css/accident main dashboard.css' %}"
 		/>
 		{% endblock %}
-		<!-- Tailwind CSS CDN -->
-		<script src="https://cdn.tailwindcss.com"></script>
-			<script src="{% static 'js/admin js/accident js/general accident.js'%}"defer></script>
 		<!-- Inter Font -->
 		<link
 			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -28,8 +25,6 @@
 			rel="stylesheet"
 			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
 		/>
-		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
-		<script src="{% static 'js/admin js/accident js/general accident.js'%}"defer></script>
 	</head>
 	<body class="flex min-h-screen">
 		<!-- 
@@ -71,31 +66,41 @@
 					</h3>
 					<ul>
 						<li class="mb-2">
-							<a href="{% url 'accident_dashboard_main' %}" class="sidebar-nav-item{% if request.resolver_match.url_name == 'accident_dashboard_main' %}active{% endif %}"
+							<a
+								href="{% url 'accident_dashboard_main' %}"
+								class="sidebar-nav-item{% if request.resolver_match.url_name == 'accident_dashboard_main' %}active{% endif %}"
 								><i class="fas fa-car-crash sidebar-item-icon"></i>
 								<span class="sidebar-text">Accident Overview</span></a
 							>
 						</li>
 						<li class="mb-2">
-							<a href="{% url 'accident_map' %}" class="sidebar-nav-item{% if request.resolver_match.url_name == 'accident_map' %}active{% endif %}"
+							<a
+								href="{% url 'accident_map' %}"
+								class="sidebar-nav-item{% if request.resolver_match.url_name == 'accident_map' %}active{% endif %}"
 								><i class="fas fa-map-marker-alt sidebar-item-icon"></i>
 								<span class="sidebar-text">Traffic Accident Map</span></a
 							>
 						</li>
 						<li class="mb-2">
-							<a href="{% url 'accident_report_management' %}" class="sidebar-nav-item {% if request.resolver_match.url_name == 'accident_report_management' %}active{% endif %}"
+							<a
+								href="{% url 'accident_report_management' %}"
+								class="sidebar-nav-item {% if request.resolver_match.url_name == 'accident_report_management' %}active{% endif %}"
 								><i class="fas fa-file-alt sidebar-item-icon"></i>
 								<span class="sidebar-text">Accident Report Management</span></a
 							>
 						</li>
 						<li class="mb-2">
-							<a href="{% url 'accident_analysis_and_trend' %}" class="sidebar-nav-item {% if request.resolver_match.url_name == 'accident_analysis_and_trend' %}active{% endif %}"
+							<a
+								href="{% url 'accident_analysis_and_trend' %}"
+								class="sidebar-nav-item {% if request.resolver_match.url_name == 'accident_analysis_and_trend' %}active{% endif %}"
 								><i class="fas fa-chart-pie sidebar-item-icon"></i>
 								<span class="sidebar-text">Accident Analytics & Trends</span></a
 							>
 						</li>
 						<li class="mb-2">
-							<a href="{% url 'accident_admin' %}" class="sidebar-nav-item {% if request.resolver_match.url_name == 'accident_admin' %}active{% endif %}"
+							<a
+								href="{% url 'accident_admin' %}"
+								class="sidebar-nav-item {% if request.resolver_match.url_name == 'accident_admin' %}active{% endif %}"
 								><i class="fas fa-users-cog sidebar-item-icon"></i>
 								<span class="sidebar-text">Admin Users</span></a
 							>
@@ -176,7 +181,7 @@
 							</button>
 						</div>
 						<div class="py-2" id="notificationList">
-							<div class="text-center p-4 text-slate-400">
+							<div class="text-center p-4 text-slat">
 								Loading notifications...
 							</div>
 						</div>
@@ -707,9 +712,15 @@
     --- END GENERAL MODALS ---
     ================================================================================
     -->
-		
+		<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script src="{% static 'js/admin js/accident js/general accident.js'%}"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 		{% block extra_js %}
-		<script src="{% static 'js/admin js/accident js/accident main dashboard.js'%}"defer></script>
+		<script
+			src="{% static 'js/admin js/accident js/accident main dashboard.js'%}"
+			defer
+		></script>
 		{% endblock %}
 	</body>
 </html>

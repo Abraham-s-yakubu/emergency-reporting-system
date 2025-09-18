@@ -37,42 +37,276 @@
 		notificationDot: document.getElementById("notification-dot"),
 	};
 	App.data = {
+		SIMULATED_DELAY: 800,
+		allAccidentIncidents: [
+			{
+				id: "ACC-001",
+				location: "Lagos-Ibadan Expressway",
+				impact: "Fatal",
+				status: "Pending",
+				dateTime: "2025-06-20T10:00:00Z",
+				cause: "Speeding",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-002",
+				location: "Third Mainland Bridge",
+				impact: "Severe",
+				status: "Resolved",
+				dateTime: "2025-06-18T14:30:00Z",
+				cause: "Break Failure",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-003",
+				location: "Apapa-Oshodi Expressway",
+				impact: "Minor",
+				status: "Investigating",
+				dateTime: "2025-06-15T09:00:00Z",
+				cause: "Reckless Driving",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-004",
+				location: "Ojuelegba Bridge",
+				impact: "Fatal",
+				status: "Pending",
+				dateTime: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+				cause: "Container Fall",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-005",
+				location: "Badagry Expressway",
+				impact: "Severe",
+				status: "Resolved",
+				dateTime: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+				cause: "Pothole",
+				isDuplicate: true,
+			},
+			{
+				id: "ACC-006",
+				location: "Eko Bridge",
+				impact: "Minor",
+				status: "Pending",
+				dateTime: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
+				cause: "Tyre Burst",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-007",
+				location: "Victoria Island, Ahmadu Bello Way",
+				impact: "Minor",
+				status: "Resolved",
+				dateTime: "2025-05-30T11:00:00Z",
+				cause: "Drink Driving",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-008",
+				location: "Lekki-Epe Expressway",
+				impact: "Severe",
+				status: "Investigating",
+				dateTime: "2025-05-25T16:00:00Z",
+				cause: "Unknown",
+				isDuplicate: true,
+			},
+			{
+				id: "ACC-009",
+				location: "Ikorodu Road",
+				impact: "Fatal",
+				status: "Resolved",
+				dateTime: "2025-04-10T08:00:00Z",
+				cause: "Over-speeding",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-010",
+				location: "Abuja-Kaduna Road",
+				impact: "Fatal",
+				status: "Pending",
+				dateTime: "2025-01-05T12:00:00Z",
+				cause: "Head-on Collision",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-011",
+				location: "Kano-Zaria Road",
+				impact: "Severe",
+				status: "Resolved",
+				dateTime: "2025-01-10T15:00:00Z",
+				cause: "Lost Control",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-012",
+				location: "Port Harcourt-Owerri Road",
+				impact: "Minor",
+				status: "Investigating",
+				dateTime: "2025-02-01T07:30:00Z",
+				cause: "Animal Crossing",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-013",
+				location: "Enugu-Onitsha Expressway",
+				impact: "Fatal",
+				status: "Pending",
+				dateTime: "2025-02-14T20:00:00Z",
+				cause: "Overloading",
+				isDuplicate: true,
+			},
+			{
+				id: "ACC-014",
+				location: "Benin-Ore Road",
+				impact: "Severe",
+				status: "Resolved",
+				dateTime: "2025-03-01T06:00:00Z",
+				cause: "Bad Road",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-015",
+				location: "Calabar-Uyo Road",
+				impact: "Minor",
+				status: "Resolved",
+				dateTime: "2025-03-18T10:00:00Z",
+				cause: "Distracted Driving",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-016",
+				location: "Kaduna Bypass",
+				impact: "Fatal",
+				status: "Pending",
+				dateTime: "2025-04-01T13:00:00Z",
+				cause: "Speeding",
+				isDuplicate: false,
+			},
+			{
+				id: "ACC-017",
+				location: "Abeokuta-Sagamu Road",
+				impact: "Severe",
+				status: "Investigating",
+				dateTime: "2025-04-12T17:00:00Z",
+				cause: "Break Failure",
+				isDuplicate: true,
+			},
+			{
+				id: "ACC-018",
+				location: "Ibadan Ring Road",
+				impact: "Minor",
+				status: "Resolved",
+				dateTime: "2025-05-01T09:00:00Z",
+				cause: "Reckless Driving",
+				isDuplicate: false,
+			},
+		],
+
 		simulatedNotifications: [
+                { id: 'NOTIF-ACC-001', messageTitle: 'Fatal Accident', messageSubtitle: 'Lagos-Ibadan Expressway', details: 'Incident ACC-001 reported.', timestamp: new Date(Date.now() - 1 * 3600 * 1000), unread: true },
+                { id: 'NOTIF-ACC-002', messageTitle: 'New Incident', messageSubtitle: 'Ojuelegba Bridge', details: 'Incident ACC-004 requires attention.', timestamp: new Date(Date.now() - 3 * 3600 * 1000), unread: true },
+                { id: 'NOTIF-ACC-003', messageTitle: 'Incident Resolved', messageSubtitle: 'Third Mainland Bridge', details: 'Incident ACC-002 has been resolved.', timestamp: new Date(Date.now() - 26 * 3600 * 1000), unread: false },
+                { id: 'NOTIF-ACC-004', messageTitle: 'Duplicate Flagged', messageSubtitle: 'Badagry Expressway', details: 'Incident ACC-005 flagged as duplicate.', timestamp: new Date(Date.now() - 50 * 3600 * 1000), unread: false },
+            ],
+
+
+		youtubeVideos: [
 			{
-				id: "NOTIF-ACC-001",
-				messageTitle: "Fatal Accident",
-				messageSubtitle: "Lagos-Ibadan Expressway",
-				details: "Incident ACC-001 reported.",
-				timestamp: new Date(Date.now() - 1 * 3600 * 1000),
-				unread: true,
+				id: "S1-x1Fm-QJg",
+				title: "Safe Driving Practices",
+				description:
+					"Tips for defensive driving and avoiding common road hazards.",
+				category: "Driving Safety",
 			},
 			{
-				id: "NOTIF-ACC-002",
-				messageTitle: "New Incident",
-				messageSubtitle: "Ojuelegba Bridge",
-				details: "Incident ACC-004 requires attention.",
-				timestamp: new Date(Date.now() - 3 * 3600 * 1000),
-				unread: true,
+				id: "vA6z7o0_mXs",
+				title: "Pedestrian Safety Awareness",
+				description:
+					"Important rules and tips for pedestrians to stay safe on the roads.",
+				category: "Pedestrian Safety",
 			},
 			{
-				id: "NOTIF-ACC-003",
-				messageTitle: "Incident Resolved",
-				messageSubtitle: "Third Mainland Bridge",
-				details: "Incident ACC-002 has been resolved.",
-				timestamp: new Date(Date.now() - 26 * 3600 * 1000),
-				unread: false,
+				id: "f5w0M45M_t8",
+				title: "First Aid for Road Accidents",
+				description:
+					"Basic first aid steps to take when responding to a road accident victim.",
+				category: "Emergency Response",
 			},
 			{
-				id: "NOTIF-ACC-004",
-				messageTitle: "Duplicate Flagged",
-				messageSubtitle: "Badagry Expressway",
-				details: "Incident ACC-005 flagged as duplicate.",
-				timestamp: new Date(Date.now() - 50 * 3600 * 1000),
-				unread: false,
+				id: "UfC08Krxr0g",
+				title: "Motorcycle Safety Gear Guide",
+				description:
+					"A comprehensive guide to essential safety gear for motorcycle riders.",
+				category: "Motorcycle Safety",
 			},
 		],
 	};
+	console.log()
+	// Add this code block inside your main IIFE, for example, after the App.data definition.
 
+	App.connectToSupabase = function () {
+		// 1. Initialize the Supabase Client
+		const SUPABASE_URL = "https://joxvwdoogkqjmpwadqna.supabase.co";
+		const SUPABASE_ANON_KEY =
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpveHZ3ZG9vZ2txam1wd2FkcW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTg3NzQsImV4cCI6MjA2NjE5NDc3NH0.zD5lyn0HrAUUye_sVuxAyJ77VWSkd9UasOXG3Cmo23Q";
+
+		if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+			console.error("Supabase URL or Key is not defined.");
+			return;
+		}
+
+		// --- FIX #1: Use the global 'supabase' to create a new client with a different name ---
+		const supabaseClient = supabase.createClient(
+			SUPABASE_URL,
+			SUPABASE_ANON_KEY
+		);
+		console.log("Supabase client initialized.");
+
+		// 2. This function is called when a new incident arrives
+		const handleNewIncident = (payload) => {
+			const newRecord = payload.new;
+			console.log("New incident received from Supabase:", newRecord);
+
+			const formattedNotification = {
+				id: `NOTIF-ACC-${newRecord.incident_id}`,
+				messageTitle: newRecord.incident_type,
+				messageSubtitle: newRecord.address,
+				details: `A ${newRecord.severity_level} incident was reported.`,
+				timestamp: new Date(
+					newRecord.reported_date + "T" + newRecord.reported_time
+				),
+				unread: true,
+			};
+			App.data.simulatedNotifications.unshift(formattedNotification);
+			App.loadNotifications();
+		};
+
+		// 3. Subscribe to the 'accident_incidents' table
+		// --- Use the new `supabaseClient` variable here ---
+		const channel = supabaseClient.channel("accident-incidents-realtime");
+
+		channel
+			.on(
+				"postgres_changes",
+				{
+					event: "INSERT",
+					schema: "public",
+					// --- FIX #2: Use the database table name (e.g., accident_incidents) ---
+					table: "accident_incidents",
+				},
+				handleNewIncident
+			)
+			.subscribe((status) => {
+				if (status === "SUBSCRIBED") {
+					console.log(
+						"✅ Successfully subscribed to real-time incident updates!"
+					);
+				} else {
+					console.error("Failed to subscribe to real-time updates.");
+				}
+			});
+	};
 	let isSidebarPinned = false;
 	const sidebar = {
 		expandedWidth: "20rem",
@@ -374,4 +608,24 @@
 			"loadNotifications function not found on App object. Is base.js loaded?"
 		);
 	}
+
+	// At the very bottom of your general.js file, inside the IIFE
+
+	// ... your existing initGeneralEventListeners function ...
+
+	// Initialize general, data-independent listeners once the DOM is ready.
+	document.addEventListener("DOMContentLoaded", initGeneralEventListeners);
+
+	// This part loads your initial (simulated) notifications
+	if (typeof App.loadNotifications === "function") {
+		App.loadNotifications();
+	} else {
+		console.error("loadNotifications function not found on App object.");
+	}
+
+	// --- ADD THIS LINE ---
+	// Now, also connect to Supabase to listen for live updates
+	App.connectToSupabase();
+
+	// This is the closing of your main function wrapper
 })();

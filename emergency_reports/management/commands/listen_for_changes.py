@@ -5,6 +5,8 @@ import asyncio
 from django.core.management.base import BaseCommand
 from supabase import acreate_client, AsyncClient
 from dotenv import load_dotenv
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 class Command(BaseCommand):
     help = 'Starts a listener for Supabase realtime changes on the accident_incidents table'
@@ -31,78 +33,39 @@ class Command(BaseCommand):
         def realtime_callback(payload):
             self.stdout.write("--- Change Detected on accident_incidents ---")
             
-            # Debug: Print the entire payload structure
-            self.stdout.write(f"DEBUG - Full payload: {payload}")
-            self.stdout.write(f"DEBUG - Payload type: {type(payload)}")
-            self.stdout.write(f"DEBUG - Payload keys: {list(payload.keys()) if isinstance(payload, dict) else 'Not a dict'}")
-            
-            # Try different possible event type keys
-            event_type = payload.get('eventType') or payload.get('event_type') or payload.get('event')
-            self.stdout.write(f"DEBUG - Event type: {event_type}")
+            event_type = payload.get('eventType')
+            notification_message = None # Variable to hold our message
             
             if event_type == 'INSERT':
                 new_record = payload.get('new', {})
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f"NEW INCIDENT: A '{new_record.get('incident_type')}' "
-                        f"was reported at '{new_record.get('address')}'."
-                    )
-                )
+                # Create a user-friendly message for the frontend
+                notification_message = f"New Incident: A '{new_record.get('incident_type')}' was reported at '{new_record.get('address')}'."
+                self.stdout.write(self.style.SUCCESS(notification_message))
 
             elif event_type == 'UPDATE':
                 new_record = payload.get('new', {})
                 old_record = payload.get('old', {})
-                old_status = old_record.get('status')
-                new_status = new_record.get('status')
-                
-                if old_status != new_status:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"STATUS UPDATE: Incident #{new_record.get('incident_id')} "
-                            f"changed from '{old_status}' to '{new_status}'."
-                        )
-                    )
+                if old_record.get('status') != new_record.get('status'):
+                    notification_message = f"Status Update: Incident #{new_record.get('incident_id')} changed to '{new_record.get('status')}'."
+                    self.stdout.write(self.style.WARNING(notification_message))
 
             elif event_type == 'DELETE':
                 old_record = payload.get('old', {})
-                self.stdout.write(
-                    self.style.ERROR(
-                        f"INCIDENT DELETED: Incident #{old_record.get('incident_id')} was removed."
-                    )
+                # You might not want to notify all users of a deletion, but here's how
+                notification_message = f"Incident Cleared: Incident #{old_record.get('incident_id')} was removed."
+                self.stdout.write(self.style.ERROR(notification_message))
+            
+            # --- THIS IS THE NEW PART ---
+            # If we created a notification message, send it to the channel layer
+            if notification_message:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "notifications", # The name of the group in your consumer
+                    {
+                        "type": "send_notification", # The method name to call on your consumer
+                        "message": notification_message,
+                    },
                 )
-            else:
-                self.stdout.write(f"UNKNOWN EVENT TYPE: {event_type}")
+                self.stdout.write(self.style.SUCCESS("--> Sent notification to frontend via Channels."))
             
             self.stdout.write("---------------------------------------------")
-
-        # 3. Subscribe to changes using the async client
-        channel_name = "db-accident_incidents"
-        
-        self.stdout.write(f"Attempting to subscribe to channel '{channel_name}'...")
-
-        channel = supabase.channel(channel_name).on_postgres_changes(
-            event="*",
-            schema="public",
-            table="accident_incidents",
-            callback=realtime_callback
-        )
-        
-        subscription = await channel.subscribe()
-        
-        self.stdout.write(self.style.SUCCESS("Successfully subscribed! Listening for changes..."))
-
-        # 4. Keep the script alive to listen for events
-        try:
-            while True:
-                await asyncio.sleep(1)
-        except KeyboardInterrupt:
-            self.stdout.write("\nListener stopped by user.")
-        except Exception as e:
-            self.stderr.write(f"Error occurred: {e}")
-        finally:
-            # It's good practice to unsubscribe when exiting
-            try:
-                await subscription.unsubscribe()
-                self.stdout.write("Unsubscribed from channel.")
-            except:
-                pass
