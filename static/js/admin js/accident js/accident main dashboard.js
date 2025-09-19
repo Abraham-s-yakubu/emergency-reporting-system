@@ -6,15 +6,11 @@
  * ================================================================================
  */
 (function () {
-
-
-	
 	// Ensure the global App object exists
 	window.App = window.App || {};
 
 	// --- Page-Specific Data ---
 	// In a real Django app, this would be fetched via an API call or rendered into the template.
-	
 
 	// Cache Dashboard-specific UI Elements
 	App.els = {
@@ -75,27 +71,105 @@
 	let monthlyChartInstance = null;
 	let statisticsChartInstance = null;
 
-	async function getDashboardStats() {
-		// ... (rest of the functions remain the same as in the single-file version)
+	// async function getDashboardStats() {
+	// 	// ... (rest of the functions remain the same as in the single-file version)
+	// 	const now = new Date();
+	// 	const currentMonth = now.getMonth();
+	// 	const currentYear = now.getFullYear();
+	// 	const incidentsThisMonth = App.data.allAccidentIncidents.filter((inc) => {
+	// 		const incidentDate = new Date(inc.dateTime);
+	// 		return (
+	// 			incidentDate.getMonth() === currentMonth &&
+	// 			incidentDate.getFullYear() === currentYear
+	// 		);
+	// 	}).length;
+	// 	const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+	// 	const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+	// 	const incidentsLastMonth = App.data.allAccidentIncidents.filter((inc) => {
+	// 		const incidentDate = new Date(inc.dateTime);
+	// 		return (
+	// 			incidentDate.getMonth() === prevMonth &&
+	// 			incidentDate.getFullYear() === prevMonthYear
+	// 		);
+	// 	}).length;
+	// 	let incidentsTrend = 0;
+	// 	let incidentsTrendDirection = "neutral";
+	// 	if (incidentsLastMonth > 0) {
+	// 		incidentsTrend =
+	// 			((incidentsThisMonth - incidentsLastMonth) / incidentsLastMonth) * 100;
+	// 		incidentsTrendDirection = incidentsTrend >= 0 ? "up" : "down";
+	// 	} else if (incidentsThisMonth > 0) {
+	// 		incidentsTrend = 100;
+	// 		incidentsTrendDirection = "up";
+	// 	}
+	// 	return new Promise((r) =>
+	// 		setTimeout(
+	// 			() =>
+	// 				r({
+	// 					resolvedReports: { value: 550, trend: 12, trendDirection: "up" },
+	// 					pendingReports: { value: 85, trend: 5, trendDirection: "down" },
+	// 					totalIncidentsThisMonth: {
+	// 						value: incidentsThisMonth,
+	// 						trend: Math.abs(incidentsTrend),
+	// 						trendDirection: incidentsTrendDirection,
+	// 					},
+	// 					responseRate: { current: 78.5, lastMonth: 72.0, target: 90 },
+	// 				}),
+	// 			App.data.SIMULATED_DELAY
+	// 		)
+	// 	);
+	// }
+
+	// In your page-specific.js file
+
+	function getDashboardStats() {
+		// This function no longer needs to be async.
+		console.log("Calculating dashboard stats from live data...");
+
+		const allIncidents = App.data.allAccidentIncidents;
+		if (!allIncidents || allIncidents.length === 0) {
+			// Return zeroed-out data if there are no incidents yet
+			return {
+				resolvedReports: { value: 0 },
+				pendingReports: { value: 0 },
+				totalIncidentsThisMonth: {
+					value: 0,
+					trend: 0,
+					trendDirection: "neutral",
+				},
+				responseRate: { current: 0, lastMonth: 0, target: 90 },
+			};
+		}
+
+		// 1. Calculate Resolved vs. Pending Reports
+		const resolvedCount = allIncidents.filter(
+			(inc) => inc.status === "Resolved"
+		).length;
+		const pendingCount = allIncidents.length - resolvedCount; // Any status that isn't "Resolved"
+
+		// 2. Calculate Total Incidents This Month (your original logic was correct)
 		const now = new Date();
 		const currentMonth = now.getMonth();
 		const currentYear = now.getFullYear();
-		const incidentsThisMonth = App.data.allAccidentIncidents.filter((inc) => {
+		const incidentsThisMonth = allIncidents.filter((inc) => {
 			const incidentDate = new Date(inc.dateTime);
 			return (
 				incidentDate.getMonth() === currentMonth &&
 				incidentDate.getFullYear() === currentYear
 			);
 		}).length;
+
+		// 3. Calculate Trend for Total Incidents (your original logic was correct)
 		const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
 		const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-		const incidentsLastMonth = App.data.allAccidentIncidents.filter((inc) => {
+		const incidentsLastMonth = allIncidents.filter((inc) => {
 			const incidentDate = new Date(inc.dateTime);
 			return (
 				incidentDate.getMonth() === prevMonth &&
 				incidentDate.getFullYear() === prevMonthYear
 			);
 		}).length;
+
 		let incidentsTrend = 0;
 		let incidentsTrendDirection = "neutral";
 		if (incidentsLastMonth > 0) {
@@ -106,57 +180,71 @@
 			incidentsTrend = 100;
 			incidentsTrendDirection = "up";
 		}
-		return new Promise((r) =>
-			setTimeout(
-				() =>
-					r({
-						resolvedReports: { value: 550, trend: 12, trendDirection: "up" },
-						pendingReports: { value: 85, trend: 5, trendDirection: "down" },
-						totalIncidentsThisMonth: {
-							value: incidentsThisMonth,
-							trend: Math.abs(incidentsTrend),
-							trendDirection: incidentsTrendDirection,
-						},
-						responseRate: { current: 78.5, lastMonth: 72.0, target: 90 },
-					}),
-				App.data.SIMULATED_DELAY
-			)
-		);
+
+		// 4. Calculate a real Response Rate (Resolved / Total)
+		const responseRate = (resolvedCount / allIncidents.length) * 100;
+
+		// 5. Return the new, DYNAMIC data object
+		return {
+			resolvedReports: { value: resolvedCount }, // Using calculated value
+			pendingReports: { value: pendingCount }, // Using calculated value
+			totalIncidentsThisMonth: {
+				value: incidentsThisMonth,
+				trend: Math.abs(incidentsTrend),
+				trendDirection: incidentsTrendDirection,
+			},
+			// We calculate the current rate. lastMonth and target are still placeholders.
+			responseRate: { current: responseRate, lastMonth: 72.0, target: 90 },
+		};
 	}
 
-	async function getMonthlyIncidentsData() {
-		return new Promise((r) =>
-			setTimeout(
-				() =>
-					r({
-						labels: [
-							"Jan",
-							"Feb",
-							"Mar",
-							"Apr",
-							"May",
-							"Jun",
-							"Jul",
-							"Aug",
-							"Sep",
-							"Oct",
-							"Nov",
-							"Dec",
-						],
-						datasets: [
-							{
-								label: "Accident Incidents",
-								data: [18, 15, 22, 19, 23, 20, 14, 28, 30, 25, 20, 35],
-								backgroundColor: "rgba(59, 130, 246, 0.6)",
-								borderColor: "rgba(59, 130, 246, 1)",
-								borderWidth: 1,
-								borderRadius: 4,
-							},
-						],
-					}),
-				App.data.SIMULATED_DELAY
-			)
-		);
+	// In your page-specific.js file
+
+	function getMonthlyIncidentsData() {
+		// This function is now synchronous because the data is already in memory.
+		console.log("Calculating monthly chart data from fetched incidents...");
+
+		// Create an array of 12 zeros, one for each month.
+		const monthlyCounts = Array(12).fill(0);
+		const currentYear = new Date().getFullYear();
+
+		// Loop through all the incidents we fetched from the database.
+		App.data.allAccidentIncidents.forEach((incident) => {
+			const incidentDate = new Date(incident.dateTime);
+			// Only count incidents from the current year for this chart
+			if (incidentDate.getFullYear() === currentYear) {
+				const month = incidentDate.getMonth(); // 0 = January, 1 = February, etc.
+				monthlyCounts[month]++; // Increment the count for that month.
+			}
+		});
+
+		// Return the data in the format Chart.js expects.
+		return {
+			labels: [
+				"Jan",
+				"Feb",
+				"Mar",
+				"Apr",
+				"May",
+				"Jun",
+				"Jul",
+				"Aug",
+				"Sep",
+				"Oct",
+				"Nov",
+				"Dec",
+			],
+			datasets: [
+				{
+					label: `Accident Incidents for ${currentYear}`,
+					data: monthlyCounts, // Use our dynamically calculated counts
+					backgroundColor: "rgba(59, 130, 246, 0.6)",
+					borderColor: "rgba(59, 130, 246, 1)",
+					borderWidth: 1,
+					borderRadius: 4,
+				},
+			],
+		};
 	}
 
 	async function getActiveIncidents() {
@@ -195,71 +283,67 @@
 		)}% from last month`;
 	}
 
-	async function loadDashboardStats() {
-		const stats = await getDashboardStats();
-		if (App.els.resolvedReportsEl) {
-			App.els.resolvedReportsEl.textContent = stats.resolvedReports.value;
-			App.els.resolvedReportsEl.classList.remove("loading-placeholder");
-			renderTrend(
-				App.els.resolvedReportsEl.nextElementSibling,
-				stats.resolvedReports.trend,
-				stats.resolvedReports.trendDirection
-			);
-		}
-		if (App.els.pendingReportsEl) {
-			App.els.pendingReportsEl.textContent = stats.pendingReports.value;
-			App.els.pendingReportsEl.classList.remove("loading-placeholder");
-			renderTrend(
-				App.els.pendingReportsEl.nextElementSibling,
-				stats.pendingReports.trend,
-				stats.pendingReports.trendDirection
-			);
-		}
-		if (App.els.totalIncidentsThisMonthEl) {
-			App.els.totalIncidentsThisMonthEl.textContent =
-				stats.totalIncidentsThisMonth.value;
-			App.els.totalIncidentsThisMonthEl.classList.remove("loading-placeholder");
-			renderTrend(
-				App.els.totalIncidentsThisMonthEl.nextElementSibling,
-				stats.totalIncidentsThisMonth.trend,
-				stats.totalIncidentsThisMonth.trendDirection
-			);
-		}
-		updateProgressBar(
-			stats.responseRate.current,
-			App.els.responseRateProgress,
-			App.els.responseRatePercentage
-		);
-		if (App.els.responseRateCurrent) {
-			const trendIcon =
-				stats.responseRate.current > stats.responseRate.lastMonth
-					? "fa-arrow-up text-green-400"
-					: "fa-arrow-down text-red-400";
-			App.els.responseRateCurrent.innerHTML = `${stats.responseRate.current.toFixed(
-				2
-			)}% <i class="fas ${trendIcon} text-xs"></i>`;
-		}
-		if (App.els.responseRateLastMonth)
-			App.els.responseRateLastMonth.innerHTML = `${stats.responseRate.lastMonth.toFixed(
-				2
-			)}% <i class="fas fa-plus text-green-400 text-xs"></i>`;
-		if (App.els.responseRateMessage1 && App.els.responseRateMessage2) {
-			if (stats.responseRate.current >= stats.responseRate.target) {
-				App.els.responseRateMessage1.textContent =
-					"Excellent response rate! Target achieved.";
-				App.els.responseRateMessage2.textContent =
-					"Maintain this high standard.";
-			} else if (stats.responseRate.current >= 70) {
-				App.els.responseRateMessage1.textContent =
-					"Current accident response rate is good, keep it up!";
-				App.els.responseRateMessage2.textContent = `Aim for ${stats.responseRate.target}% and above.`;
-			} else {
-				App.els.responseRateMessage1.textContent =
-					"Response rate needs improvement.";
-				App.els.responseRateMessage2.textContent = `Focus on reaching the ${stats.responseRate.target}% target.`;
-			}
-		}
-	}
+// In your page-specific.js file
+
+function loadDashboardStats() {
+    const stats = getDashboardStats();
+
+    // Update Resolved Reports
+    if (App.els.resolvedReportsEl) {
+        App.els.resolvedReportsEl.textContent = stats.resolvedReports.value;
+        App.els.resolvedReportsEl.classList.remove("loading-placeholder");
+        if (stats.resolvedReports.trend !== undefined) {
+            renderTrend(App.els.resolvedReportsEl.nextElementSibling, stats.resolvedReports.trend, stats.resolvedReports.trendDirection);
+        }
+    }
+
+    // Update Pending Reports
+    if (App.els.pendingReportsEl) {
+        App.els.pendingReportsEl.textContent = stats.pendingReports.value;
+        App.els.pendingReportsEl.classList.remove("loading-placeholder");
+        if (stats.pendingReports.trend !== undefined) {
+            renderTrend(App.els.pendingReportsEl.nextElementSibling, stats.pendingReports.trend, stats.pendingReports.trendDirection);
+        }
+    }
+
+    // Update Total Incidents This Month
+    if (App.els.totalIncidentsThisMonthEl) {
+        App.els.totalIncidentsThisMonthEl.textContent = stats.totalIncidentsThisMonth.value;
+        App.els.totalIncidentsThisMonthEl.classList.remove("loading-placeholder");
+        renderTrend(App.els.totalIncidentsThisMonthEl.nextElementSibling, stats.totalIncidentsThisMonth.trend, stats.totalIncidentsThisMonth.trendDirection);
+    }
+
+    // --- THIS IS THE COMPLETE LOGIC FOR THE RESPONSE RATE COMPONENT ---
+    // Update the progress bar circle and percentage text
+    updateProgressBar(
+        stats.responseRate.current,
+        App.els.responseRateProgress,
+        App.els.responseRatePercentage
+    );
+
+    // Update the "Current" and "Last Month" text below the chart
+    if (App.els.responseRateCurrent) {
+        const trendIcon = stats.responseRate.current >= stats.responseRate.lastMonth ? "fa-arrow-up text-green-400" : "fa-arrow-down text-red-400";
+        App.els.responseRateCurrent.innerHTML = `${stats.responseRate.current.toFixed(1)}% <i class="fas ${trendIcon} text-xs"></i>`;
+    }
+    if (App.els.responseRateLastMonth) {
+        App.els.responseRateLastMonth.textContent = `${stats.responseRate.lastMonth.toFixed(1)}%`;
+    }
+    
+    // Update the final summary messages
+    if (App.els.responseRateMessage1 && App.els.responseRateMessage2) {
+        if (stats.responseRate.current >= stats.responseRate.target) {
+            App.els.responseRateMessage1.textContent = "Excellent rate! Target achieved.";
+            App.els.responseRateMessage2.textContent = "Maintain this high standard.";
+        } else if (stats.responseRate.current >= 70) {
+            App.els.responseRateMessage1.textContent = "Response rate is good, keep it up!";
+            App.els.responseRateMessage2.textContent = `Aim for the ${stats.responseRate.target}% target.`;
+        } else {
+            App.els.responseRateMessage1.textContent = "Response rate needs improvement.";
+            App.els.responseRateMessage2.textContent = `Focus on reaching the ${stats.responseRate.target}% target.`;
+        }
+    }
+}
 
 	async function initMonthlyChart() {
 		if (
@@ -307,18 +391,90 @@
 	}
 
 	function getStatisticsCounts(incidents) {
-		let fatal = 0,
-			severe = 0,
-			minor = 0,
-			duplicateReports = 0;
+		let highSeverity = 0;
+		let mediumSeverity = 0;
+		let lowSeverity = 0;
+		let duplicateReports = 0;
+
 		incidents.forEach((inc) => {
-			if (inc.impact === "Fatal") fatal++;
-			else if (inc.impact === "Severe") severe++;
-			else if (inc.impact === "Minor") minor++;
+			// Check for the actual values from your database
+			if (inc.impact === "High Severity") highSeverity++;
+			else if (inc.impact === "Medium Severity") mediumSeverity++;
+			else if (inc.impact === "Low Severity") lowSeverity++;
+
 			if (inc.isDuplicate) duplicateReports++;
 		});
-		return { fatal, severe, minor, duplicateReports };
+
+		// Return the new counts
+		return { highSeverity, mediumSeverity, lowSeverity, duplicateReports };
 	}
+	// In your page-specific.js file
+
+	// async function renderStatisticsChart(selectedMonth, selectedYear) {
+	// 	if (
+	// 		!App.els.statisticsChartContainer ||
+	// 		!App.els.statisticsChart ||
+	// 		!App.els.noDataStatisticsMessage ||
+	// 		typeof Chart === "undefined"
+	// 	)
+	// 		return;
+
+	// 	// ... (the filtering part at the top of the function stays the same)
+	// 	const filteredIncidents = App.data.allAccidentIncidents.filter(/*...*/);
+
+	// 	// --- CHANGE #1: Use the new variable names ---
+	// 	const { highSeverity, mediumSeverity, lowSeverity, duplicateReports } =
+	// 		getStatisticsCounts(filteredIncidents);
+
+	// 	// ... (the await setTimeout part stays the same)
+	// 	await new Promise((resolve) =>
+	// 		setTimeout(resolve, App.data.SIMULATED_DELAY)
+	// 	);
+
+	// 	const hasData = highSeverity + mediumSeverity + lowSeverity > 0;
+	// 	if (!hasData) {
+	// 		// ... (this part stays the same)
+	// 	} else {
+	// 		App.els.noDataStatisticsMessage.classList.add("hidden");
+	// 		App.els.statisticsChart.style.display = "block";
+	// 		const chartData = {
+	// 			// --- CHANGE #2: Update the labels to match the data ---
+	// 			labels: [
+	// 				"High Severity",
+	// 				"Medium Severity",
+	// 				"Low Severity",
+	// 				"Duplicate Reports",
+	// 			],
+	// 			datasets: [
+	// 				{
+	// 					label: "Accident Impact",
+	// 					// --- CHANGE #3: Use the new data variables in the correct order ---
+	// 					data: [highSeverity, mediumSeverity, lowSeverity, duplicateReports],
+	// 					backgroundColor: [
+	// 						"rgba(239, 68, 68, 0.8)", // Red for High
+	// 						"rgba(245, 158, 11, 0.8)", // Orange for Medium
+	// 						"rgba(52, 211, 153, 0.8)", // Green for Low
+	// 						"rgba(107, 114, 128, 0.8)", // Gray for Duplicates
+	// 					],
+	// 					borderColor: "#1a202c",
+	// 					borderWidth: 2,
+	// 				},
+	// 			],
+	// 		};
+	// 		if (statisticsChartInstance) statisticsChartInstance.destroy();
+	// 		statisticsChartInstance = new Chart(
+	// 			App.els.statisticsChart.getContext("2d"),
+	// 			{
+	// 				type: "doughnut",
+	// 				data: chartData,
+	// 				// ... (options stay the same)
+	// 			}
+	// 		);
+	// 	}
+	// 	App.els.statisticsChartContainer.classList.remove("loading-placeholder");
+	// }
+	// In your page-specific.js file (accident main dashboard.js)
+	// In your page-specific.js file
 
 	async function renderStatisticsChart(selectedMonth, selectedYear) {
 		if (
@@ -326,11 +482,20 @@
 			!App.els.statisticsChart ||
 			!App.els.noDataStatisticsMessage ||
 			typeof Chart === "undefined"
-		)
+		) {
 			return;
-		App.els.statisticsChartContainer.classList.add("loading-placeholder");
-		App.els.statisticsChart.style.display = "none";
-		App.els.noDataStatisticsMessage.classList.add("hidden");
+		}
+
+		// --- START DEBUGGING ---
+		console.log(
+			`--- Debugging renderStatisticsChart for Month: ${selectedMonth}, Year: ${selectedYear} ---`
+		);
+
+		if (!Array.isArray(App.data.allAccidentIncidents)) {
+			console.error("❌ FATAL: App.data.allAccidentIncidents is NOT an array!");
+			return;
+		}
+
 		const filteredIncidents = App.data.allAccidentIncidents.filter((inc) => {
 			const incidentDate = new Date(inc.dateTime);
 			const monthMatch =
@@ -341,25 +506,43 @@
 				incidentDate.getFullYear() === parseInt(selectedYear);
 			return monthMatch && yearMatch;
 		});
-		const { fatal, severe, minor, duplicateReports } =
-			getStatisticsCounts(filteredIncidents);
-		await new Promise((resolve) =>
-			setTimeout(resolve, App.data.SIMULATED_DELAY)
+		console.log(
+			"1. Incidents AFTER filtering for month/year:",
+			filteredIncidents
 		);
-		const hasData = fatal + severe + minor + duplicateReports > 0;
+
+		const counts = getStatisticsCounts(filteredIncidents);
+		console.log("2. Counts RETURNED from getStatisticsCounts:", counts);
+
+		const hasData =
+			counts.highSeverity + counts.mediumSeverity + counts.lowSeverity > 0;
+		console.log("3. The 'hasData' check is:", hasData);
+
 		if (!hasData) {
+			console.log("4. No data found. Displaying the 'No data' message.");
 			if (statisticsChartInstance) statisticsChartInstance.destroy();
 			App.els.noDataStatisticsMessage.classList.remove("hidden");
 			App.els.statisticsChart.style.display = "none";
 		} else {
+			console.log("4. Data found! Preparing to render the chart.");
 			App.els.noDataStatisticsMessage.classList.add("hidden");
 			App.els.statisticsChart.style.display = "block";
 			const chartData = {
-				labels: ["Fatal", "Severe", "Minor", "Duplicate Reports"],
+				labels: [
+					"High Severity",
+					"Medium Severity",
+					"Low Severity",
+					"Duplicate Reports",
+				],
 				datasets: [
 					{
 						label: "Accident Impact",
-						data: [fatal, severe, minor, duplicateReports],
+						data: [
+							counts.highSeverity,
+							counts.mediumSeverity,
+							counts.lowSeverity,
+							counts.duplicateReports,
+						],
 						backgroundColor: [
 							"rgba(239, 68, 68, 0.8)",
 							"rgba(245, 158, 11, 0.8)",
@@ -371,6 +554,11 @@
 					},
 				],
 			};
+			console.log(
+				"5. Final chartData object being sent to Chart.js:",
+				chartData
+			);
+
 			if (statisticsChartInstance) statisticsChartInstance.destroy();
 			statisticsChartInstance = new Chart(
 				App.els.statisticsChart.getContext("2d"),
@@ -378,8 +566,11 @@
 					type: "doughnut",
 					data: chartData,
 					options: {
+						// --- ADD THESE OPTIONS ---
 						responsive: true,
-						maintainAspectRatio: false,
+						maintainAspectRatio: false, // This is the most important setting for this issue
+
+						// These are your original options for the legend and tooltips
 						plugins: {
 							legend: {
 								position: "right",
@@ -402,8 +593,10 @@
 					},
 				}
 			);
+			console.log("6. Chart instance created.");
 		}
 		App.els.statisticsChartContainer.classList.remove("loading-placeholder");
+		console.log("--- Finished renderStatisticsChart ---");
 	}
 
 	function populateStatisticsFilters() {
@@ -707,31 +900,53 @@
 	}
 
 	// --- Main Initialization Orchestrator ---
-	document.addEventListener("DOMContentLoaded", () => {
-		// Initialize page-specific functionality
-		initDashboardEventListeners();
-		loadDashboardStats();
-		renderActiveIncidentsTable();
-		populateStatisticsFilters();
+	// document.addEventListener("DOMContentLoaded", () => {
+	// 	// Initialize page-specific functionality
+	// 	initDashboardEventListeners();
+	// 	loadDashboardStats();
+	// 	renderActiveIncidentsTable();
+	// 	populateStatisticsFilters();
 
-		// Call general functions that depend on this page's data
-		if (typeof App.loadNotifications === "function") {
-			App.loadNotifications();
-		} else {
-			console.error(
-				"loadNotifications function not found on App object. Is base.js loaded?"
-			);
-		}
-	});
+	// 	// Call general functions that depend on this page's data
+	// 	if (typeof App.loadNotifications === "function") {
+	// 		App.loadNotifications();
+	// 	} else {
+	// 		console.error(
+	// 			"loadNotifications function not found on App object. Is base.js loaded?"
+	// 		);
+	// 	}
+	// });
+	// In your page-specific.js file...
 
-	window.onload = () => {
-		// Initialize charts after everything (including images) is loaded
-		initMonthlyChart();
-		if (App.els.statisticsMonthFilter && App.els.statisticsYearFilter) {
+	(function () {
+		// ... (window.App, App.els, and all your function definitions like getDashboardStats, renderActiveIncidentsTable, etc.)
+
+		// --- NEW: Create a single initialization function for this page ---
+		// This function will be called by general.js AFTER the data is ready.
+		App.initDashboardPage = function () {
+			console.log("Initializing dashboard-specific components...");
+			initDashboardEventListeners();
+			loadDashboardStats();
+			renderActiveIncidentsTable();
+			populateStatisticsFilters();
+			initMonthlyChart();
 			renderStatisticsChart(
 				App.els.statisticsMonthFilter.value,
 				App.els.statisticsYearFilter.value
 			);
-		}
-	};
+		};
+
+		// --- IMPORTANT: Make sure you have DELETED the old 'DOMContentLoaded' listener from THIS file. ---
+	})();
+
+	// window.onload = () => {
+	// 	// Initialize charts after everything (including images) is loaded
+	// 	initMonthlyChart();
+	// 	if (App.els.statisticsMonthFilter && App.els.statisticsYearFilter) {
+	// 		renderStatisticsChart(
+	// 			App.els.statisticsMonthFilter.value,
+	// 			App.els.statisticsYearFilter.value
+	// 		);
+	// 	}
+	// };
 })();

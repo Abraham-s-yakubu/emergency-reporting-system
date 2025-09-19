@@ -439,3 +439,14 @@
         --- END PAGE-SPECIFIC CSS ---
         ================================================================================
         */
+
+/* In your main CSS file */
+
+.progress-ring__circle {
+    /* This makes the animation smooth */
+    transition: stroke-dashoffset 0.8s ease-out;
+
+    /* This rotates the circle so the line starts at the top (12 o'clock) */
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}

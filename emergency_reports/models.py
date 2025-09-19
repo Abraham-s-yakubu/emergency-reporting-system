@@ -34,7 +34,7 @@ class AccidentIncident(models.Model):
     SEVERITY_CHOICES = [
         ('High Severity', 'High Severity'),
         ('Medium Severity', 'Medium Severity'),
-        ('Low Severity', 'Low Severity'),
+        ('ow SeverityL', 'Low Severity'),
     ]
     severity_level = models.CharField(
         max_length=50,

@@ -40,159 +40,6 @@
 		SIMULATED_DELAY: 800,
 		allAccidentIncidents: [
 			{
-				id: "ACC-001",
-				location: "Lagos-Ibadan Expressway",
-				impact: "Fatal",
-				status: "Pending",
-				dateTime: "2025-06-20T10:00:00Z",
-				cause: "Speeding",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-002",
-				location: "Third Mainland Bridge",
-				impact: "Severe",
-				status: "Resolved",
-				dateTime: "2025-06-18T14:30:00Z",
-				cause: "Break Failure",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-003",
-				location: "Apapa-Oshodi Expressway",
-				impact: "Minor",
-				status: "Investigating",
-				dateTime: "2025-06-15T09:00:00Z",
-				cause: "Reckless Driving",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-004",
-				location: "Ojuelegba Bridge",
-				impact: "Fatal",
-				status: "Pending",
-				dateTime: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-				cause: "Container Fall",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-005",
-				location: "Badagry Expressway",
-				impact: "Severe",
-				status: "Resolved",
-				dateTime: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-				cause: "Pothole",
-				isDuplicate: true,
-			},
-			{
-				id: "ACC-006",
-				location: "Eko Bridge",
-				impact: "Minor",
-				status: "Pending",
-				dateTime: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
-				cause: "Tyre Burst",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-007",
-				location: "Victoria Island, Ahmadu Bello Way",
-				impact: "Minor",
-				status: "Resolved",
-				dateTime: "2025-05-30T11:00:00Z",
-				cause: "Drink Driving",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-008",
-				location: "Lekki-Epe Expressway",
-				impact: "Severe",
-				status: "Investigating",
-				dateTime: "2025-05-25T16:00:00Z",
-				cause: "Unknown",
-				isDuplicate: true,
-			},
-			{
-				id: "ACC-009",
-				location: "Ikorodu Road",
-				impact: "Fatal",
-				status: "Resolved",
-				dateTime: "2025-04-10T08:00:00Z",
-				cause: "Over-speeding",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-010",
-				location: "Abuja-Kaduna Road",
-				impact: "Fatal",
-				status: "Pending",
-				dateTime: "2025-01-05T12:00:00Z",
-				cause: "Head-on Collision",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-011",
-				location: "Kano-Zaria Road",
-				impact: "Severe",
-				status: "Resolved",
-				dateTime: "2025-01-10T15:00:00Z",
-				cause: "Lost Control",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-012",
-				location: "Port Harcourt-Owerri Road",
-				impact: "Minor",
-				status: "Investigating",
-				dateTime: "2025-02-01T07:30:00Z",
-				cause: "Animal Crossing",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-013",
-				location: "Enugu-Onitsha Expressway",
-				impact: "Fatal",
-				status: "Pending",
-				dateTime: "2025-02-14T20:00:00Z",
-				cause: "Overloading",
-				isDuplicate: true,
-			},
-			{
-				id: "ACC-014",
-				location: "Benin-Ore Road",
-				impact: "Severe",
-				status: "Resolved",
-				dateTime: "2025-03-01T06:00:00Z",
-				cause: "Bad Road",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-015",
-				location: "Calabar-Uyo Road",
-				impact: "Minor",
-				status: "Resolved",
-				dateTime: "2025-03-18T10:00:00Z",
-				cause: "Distracted Driving",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-016",
-				location: "Kaduna Bypass",
-				impact: "Fatal",
-				status: "Pending",
-				dateTime: "2025-04-01T13:00:00Z",
-				cause: "Speeding",
-				isDuplicate: false,
-			},
-			{
-				id: "ACC-017",
-				location: "Abeokuta-Sagamu Road",
-				impact: "Severe",
-				status: "Investigating",
-				dateTime: "2025-04-12T17:00:00Z",
-				cause: "Break Failure",
-				isDuplicate: true,
-			},
-			{
 				id: "ACC-018",
 				location: "Ibadan Ring Road",
 				impact: "Minor",
@@ -204,12 +51,39 @@
 		],
 
 		simulatedNotifications: [
-                { id: 'NOTIF-ACC-001', messageTitle: 'Fatal Accident', messageSubtitle: 'Lagos-Ibadan Expressway', details: 'Incident ACC-001 reported.', timestamp: new Date(Date.now() - 1 * 3600 * 1000), unread: true },
-                { id: 'NOTIF-ACC-002', messageTitle: 'New Incident', messageSubtitle: 'Ojuelegba Bridge', details: 'Incident ACC-004 requires attention.', timestamp: new Date(Date.now() - 3 * 3600 * 1000), unread: true },
-                { id: 'NOTIF-ACC-003', messageTitle: 'Incident Resolved', messageSubtitle: 'Third Mainland Bridge', details: 'Incident ACC-002 has been resolved.', timestamp: new Date(Date.now() - 26 * 3600 * 1000), unread: false },
-                { id: 'NOTIF-ACC-004', messageTitle: 'Duplicate Flagged', messageSubtitle: 'Badagry Expressway', details: 'Incident ACC-005 flagged as duplicate.', timestamp: new Date(Date.now() - 50 * 3600 * 1000), unread: false },
-            ],
-
+			{
+				id: "NOTIF-ACC-001",
+				messageTitle: "Fatal Accident",
+				messageSubtitle: "Lagos-Ibadan Expressway",
+				details: "Incident ACC-001 reported.",
+				timestamp: new Date(Date.now() - 1 * 3600 * 1000),
+				unread: true,
+			},
+			{
+				id: "NOTIF-ACC-002",
+				messageTitle: "New Incident",
+				messageSubtitle: "Ojuelegba Bridge",
+				details: "Incident ACC-004 requires attention.",
+				timestamp: new Date(Date.now() - 3 * 3600 * 1000),
+				unread: true,
+			},
+			{
+				id: "NOTIF-ACC-003",
+				messageTitle: "Incident Resolved",
+				messageSubtitle: "Third Mainland Bridge",
+				details: "Incident ACC-002 has been resolved.",
+				timestamp: new Date(Date.now() - 26 * 3600 * 1000),
+				unread: false,
+			},
+			{
+				id: "NOTIF-ACC-004",
+				messageTitle: "Duplicate Flagged",
+				messageSubtitle: "Badagry Expressway",
+				details: "Incident ACC-005 flagged as duplicate.",
+				timestamp: new Date(Date.now() - 50 * 3600 * 1000),
+				unread: false,
+			},
+		],
 
 		youtubeVideos: [
 			{
@@ -242,68 +116,111 @@
 			},
 		],
 	};
-	console.log()
+	console.log();
 	// Add this code block inside your main IIFE, for example, after the App.data definition.
 
-	App.connectToSupabase = function () {
-		// 1. Initialize the Supabase Client
-		const SUPABASE_URL = "https://joxvwdoogkqjmpwadqna.supabase.co";
-		const SUPABASE_ANON_KEY =
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpveHZ3ZG9vZ2txam1wd2FkcW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTg3NzQsImV4cCI6MjA2NjE5NDc3NH0.zD5lyn0HrAUUye_sVuxAyJ77VWSkd9UasOXG3Cmo23Q";
+	// App.connectToSupabase = function () {
+	// 	// 1. Initialize the Supabase Client
+	// 	const SUPABASE_URL = "https://joxvwdoogkqjmpwadqna.supabase.co";
+	// 	const SUPABASE_ANON_KEY =
+	// 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpveHZ3ZG9vZ2txam1wd2FkcW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTg3NzQsImV4cCI6MjA2NjE5NDc3NH0.zD5lyn0HrAUUye_sVuxAyJ77VWSkd9UasOXG3Cmo23Q";
 
-		if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-			console.error("Supabase URL or Key is not defined.");
+	// 	if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+	// 		console.error("Supabase URL or Key is not defined.");
+	// 		return;
+	// 	}
+
+	// 	// --- FIX #1: Use the global 'supabase' to create a new client with a different name ---
+	// 	const supabaseClient = supabase.createClient(
+	// 		SUPABASE_URL,
+	// 		SUPABASE_ANON_KEY
+	// 	);
+	// 	console.log("Supabase client initialized.");
+
+	// 	// 2. This function is called when a new incident arrives
+	// 	const handleNewIncident = (payload) => {
+	// 		const newRecord = payload.new;
+	// 		console.log("New incident received from Supabase:", newRecord);
+
+	// 		const formattedNotification = {
+	// 			id: `NOTIF-ACC-${newRecord.incident_id}`,
+	// 			messageTitle: newRecord.incident_type,
+	// 			messageSubtitle: newRecord.address,
+	// 			details: `A ${newRecord.severity_level} incident was reported.`,
+	// 			timestamp: new Date(
+	// 				newRecord.reported_date + "T" + newRecord.reported_time
+	// 			),
+	// 			unread: true,
+	// 		};
+	// 		App.data.simulatedNotifications.unshift(formattedNotification);
+	// 		App.loadNotifications();
+	// 	};
+
+	// 	// 3. Subscribe to the 'accident_incidents' table
+	// 	// --- Use the new `supabaseClient` variable here ---
+	// 	const channel = supabaseClient.channel("accident-incidents-realtime");
+
+	// 	channel
+	// 		.on(
+	// 			"postgres_changes",
+	// 			{
+	// 				event: "INSERT",
+	// 				schema: "public",
+	// 				// --- FIX #2: Use the database table name (e.g., accident_incidents) ---
+	// 				table: "accident_incidents",
+	// 			},
+	// 			handleNewIncident
+	// 		)
+	// 		.subscribe((status) => {
+	// 			if (status === "SUBSCRIBED") {
+	// 				console.log(
+	// 					"✅ Successfully subscribed to real-time incident updates!"
+	// 				);
+	// 			} else {
+	// 				console.error("Failed to subscribe to real-time updates.");
+	// 			}
+	// 		});
+	// };
+	App.connectToSupabase = function () {
+		// This function now assumes the client already exists on the window object.
+		if (!window.supabaseClient) {
+			console.error(
+				"Supabase client not found. Cannot connect for real-time updates."
+			);
 			return;
 		}
 
-		// --- FIX #1: Use the global 'supabase' to create a new client with a different name ---
-		const supabaseClient = supabase.createClient(
-			SUPABASE_URL,
-			SUPABASE_ANON_KEY
+		console.log("Setting up real-time subscription...");
+		const channel = window.supabaseClient.channel(
+			"accident-incidents-realtime"
 		);
-		console.log("Supabase client initialized.");
-
-		// 2. This function is called when a new incident arrives
-		const handleNewIncident = (payload) => {
-			const newRecord = payload.new;
-			console.log("New incident received from Supabase:", newRecord);
-
-			const formattedNotification = {
-				id: `NOTIF-ACC-${newRecord.incident_id}`,
-				messageTitle: newRecord.incident_type,
-				messageSubtitle: newRecord.address,
-				details: `A ${newRecord.severity_level} incident was reported.`,
-				timestamp: new Date(
-					newRecord.reported_date + "T" + newRecord.reported_time
-				),
-				unread: true,
-			};
-			App.data.simulatedNotifications.unshift(formattedNotification);
-			App.loadNotifications();
-		};
-
-		// 3. Subscribe to the 'accident_incidents' table
-		// --- Use the new `supabaseClient` variable here ---
-		const channel = supabaseClient.channel("accident-incidents-realtime");
 
 		channel
 			.on(
 				"postgres_changes",
-				{
-					event: "INSERT",
-					schema: "public",
-					// --- FIX #2: Use the database table name (e.g., accident_incidents) ---
-					table: "accident_incidents",
-				},
-				handleNewIncident
+				{ event: "INSERT", schema: "public", table: "accident_incidents" },
+				(payload) => {
+					// This is the handleNewIncident logic, placed directly
+					const newRecord = payload.new;
+					const formattedNotification = {
+						id: `NOTIF-ACC-${newRecord.incident_id}`,
+						messageTitle: newRecord.incident_type,
+						messageSubtitle: newRecord.address,
+						details: `A ${newRecord.severity_level} incident was reported.`,
+						timestamp: new Date(
+							newRecord.reported_date + "T" + newRecord.reported_time
+						),
+						unread: true,
+					};
+					App.data.simulatedNotifications.unshift(formattedNotification);
+					App.loadNotifications();
+				}
 			)
 			.subscribe((status) => {
 				if (status === "SUBSCRIBED") {
 					console.log(
 						"✅ Successfully subscribed to real-time incident updates!"
 					);
-				} else {
-					console.error("Failed to subscribe to real-time updates.");
 				}
 			});
 	};
@@ -361,6 +278,65 @@
 				App.els.pinBtn.addEventListener("click", () => this.togglePin());
 			}
 		},
+	};
+
+	// Add this new function to your general.js file
+
+	App.fetchInitialIncidents = async function () {
+		console.log("Fetching initial incidents from Supabase...");
+
+		// 1. Fetch the data from the 'accident_incidents' table
+		// We select all columns (*) and order by the most recent report first.
+		const { data: rawIncidents, error } = await window.supabaseClient
+			.from("accident_incidents")
+			.select("*")
+			.order("reported_date", { ascending: false });
+
+		// 2. Handle any errors
+		if (error) {
+			console.error("Error fetching incidents:", error);
+			return; // Stop the function if there's an error
+		}
+
+		// 3. Format the raw data to match your UI's expected structure
+		const formattedIncidents = rawIncidents.map((incident) => {
+			return {
+				// IDs and Details
+				id: `ACC-${String(incident.incident_id).padStart(3, "0")}`,
+				incidentType: incident.incident_type,
+				impact: incident.severity_level, // Maps 'severity_level' to 'impact'
+				status: incident.status,
+				isDuplicate: incident.is_duplicate,
+
+				// Location and Time
+				location: incident.address, // Maps 'address' to 'location'
+				additionalInfo: incident.additional_info,
+				latitude: incident.latitude,
+				longitude: incident.longitude,
+				dateTime: `${incident.reported_date}T${incident.reported_time}`, // Combines date and time
+
+				// Casualties and Damage
+				casualties: incident.casualties,
+				numberOfInjured: incident.number_of_injured,
+				areaAffected: incident.area_affected,
+				estimatedDamage: incident.estimated_damage,
+
+				// Property and Cause
+				propertyAffected: incident.property_affected,
+				cause: incident.accident_cause, // Maps 'accident_cause' to 'cause'
+				vehiclesAffected: incident.number_of_vehicles_affected,
+
+				// Response Details
+				responseTimeMinutes: incident.response_time_minutes,
+			};
+		});
+
+		// 4. Store the formatted data in your global App object
+		App.data.allAccidentIncidents = formattedIncidents;
+		console.log(
+			"✅ Successfully fetched and formatted incidents.",
+			App.data.allAccidentIncidents
+		);
 	};
 
 	// --- Global Popup Management ---
@@ -465,28 +441,65 @@
 	};
 
 	App.populateIncidentsTable = function (incidents) {
-		if (!App.els.allIncidentsTableBody || !App.els.totalIncidentsCount) return;
+		console.log("--- Debugging populateIncidentsTable ---");
+		console.log("Incidents received by function:", incidents);
+
+		// Checkpoint A: Verify the elements exist
+		if (!App.els.allIncidentsTableBody) {
+			console.error(
+				"❌ ABORT: Could not find HTML element with id 'allIncidentsTableBody'. Check your HTML file."
+			);
+			return;
+		}
+		if (!App.els.totalIncidentsCount) {
+			console.error(
+				"❌ ABORT: Could not find HTML element with id 'totalIncidentsCount'. Check your HTML file."
+			);
+			return;
+		}
+		console.log("✅ Checkpoint A: HTML elements found.");
+
+		// Checkpoint B: Update count and clear table
 		App.els.allIncidentsTableBody.innerHTML = "";
 		App.els.totalIncidentsCount.textContent = incidents.length;
+		console.log(
+			`✅ Checkpoint B: Count updated to ${incidents.length}. Table cleared.`
+		);
+
 		if (incidents.length === 0) {
+			console.log("Checkpoint C: No incidents to display. Exiting.");
 			App.els.allIncidentsTableBody.innerHTML =
 				'<tr><td colspan="6" class="text-center py-4 text-slate-400">No incidents found.</td></tr>';
 			return;
 		}
-		incidents.forEach((incident) => {
-			const row = `<tr><td>${incident.id}</td><td>${
-				incident.location
-			}</td><td><span class="impact-text-${incident.impact.toLowerCase()}">${
-				incident.impact
-			}</span></td><td><span class="status-badge status-${incident.status.toLowerCase()}">${
-				incident.status
-			}</span></td><td>${new Date(
-				incident.dateTime
-			).toLocaleString()}</td><td><button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-xs">View</button></td></tr>`;
-			App.els.allIncidentsTableBody.insertAdjacentHTML("beforeend", row);
-		});
-	};
 
+		// Checkpoint D: Start looping through incidents
+		console.log("Checkpoint D: Starting to build and append table rows...");
+		incidents.forEach((incident, index) => {
+			try {
+				// This will try to build the row for each incident
+				const row = `<tr><td>${incident.id}</td><td>${
+					incident.location
+				}</td><td><span class="impact-text-${incident.impact.toLowerCase()}">${
+					incident.impact
+				}</span></td><td><span class="status-badge status-${incident.status.toLowerCase()}">${
+					incident.status
+				}</span></td><td>${new Date(
+					incident.dateTime
+				).toLocaleString()}</td><td><button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-xs">View</button></td></tr>`;
+
+				App.els.allIncidentsTableBody.insertAdjacentHTML("beforeend", row);
+			} catch (error) {
+				// If an error occurs on any single incident (e.g., incident.impact is null), this will catch it
+				console.error(
+					`❌ ERROR processing incident at index ${index}:`,
+					incident
+				);
+				console.error("The specific error is:", error);
+			}
+		});
+		console.log("--- Finished populating table ---");
+	};
 	App.applyFiltersToAllIncidents = function () {
 		const status = App.els.modalStatusFilter.value;
 		const impact = App.els.modalImpactFilter.value;
@@ -599,33 +612,102 @@
 		});
 	}
 
-	// Initialize general, data-independent listeners once the DOM is ready.
-	document.addEventListener("DOMContentLoaded", initGeneralEventListeners);
-	if (typeof App.loadNotifications === "function") {
-		App.loadNotifications();
-	} else {
-		console.error(
-			"loadNotifications function not found on App object. Is base.js loaded?"
-		);
-	}
+	// // Initialize general, data-independent listeners once the DOM is ready.
+	// document.addEventListener("DOMContentLoaded", initGeneralEventListeners);
+	// if (typeof App.loadNotifications === "function") {
+	// 	App.loadNotifications();
+	// } else {
+	// 	console.error(
+	// 		"loadNotifications function not found on App object. Is base.js loaded?"
+	// 	);
+	// }
 
-	// At the very bottom of your general.js file, inside the IIFE
+	// // At the very bottom of your general.js file, inside the IIFE
 
-	// ... your existing initGeneralEventListeners function ...
+	// // ... your existing initGeneralEventListeners function ...
 
-	// Initialize general, data-independent listeners once the DOM is ready.
-	document.addEventListener("DOMContentLoaded", initGeneralEventListeners);
+	// // Initialize general, data-independent listeners once the DOM is ready.
+	// document.addEventListener("DOMContentLoaded", initGeneralEventListeners);
 
-	// This part loads your initial (simulated) notifications
-	if (typeof App.loadNotifications === "function") {
-		App.loadNotifications();
-	} else {
-		console.error("loadNotifications function not found on App object.");
-	}
+	// // This part loads your initial (simulated) notifications
+	// if (typeof App.loadNotifications === "function") {
+	// 	App.loadNotifications();
+	// } else {
+	// 	console.error("loadNotifications function not found on App object.");
+	// }
 
-	// --- ADD THIS LINE ---
-	// Now, also connect to Supabase to listen for live updates
-	App.connectToSupabase();
+	// // --- ADD THIS LINE ---
+	// // Now, also connect to Supabase to listen for live updates
+	// App.connectToSupabase();
+	// At the very bottom of your general.js file
+	// document.addEventListener("DOMContentLoaded", async function () {
+	// 	console.log("DOM is ready. Initializing app...");
 
+	// 	try {
+	// 		// --- STEP 1: CREATE AND STORE THE CLIENT GLOBALLY ---
+	// 		const SUPABASE_URL = "https://joxvwdoogkqjmpwadqna.supabase.co";
+	// 		const SUPABASE_ANON_KEY =
+	// 			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpveHZ3ZG9vZ2txam1wd2FkcW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTg3NzQsImV4cCI6MjA2NjE5NDc3NH0.zD5lyn0HrAUUye_sVuxAyJ77VWSkd9UasOXG3Cmo23Q";
+
+	// 		if (typeof supabase !== "undefined") {
+	// 			window.supabaseClient = supabase.createClient(
+	// 				SUPABASE_URL,
+	// 				SUPABASE_ANON_KEY
+	// 			);
+	// 			console.log("✅ Supabase client created and stored globally.");
+	// 		} else {
+	// 			// If the library isn't loaded, we can't continue.
+	// 			throw new Error("Supabase library did not load.");
+	// 		}
+
+	// 		// --- STEP 2: NOW RUN ALL THE FUNCTIONS THAT USE THE CLIENT ---
+	// 		initGeneralEventListeners();
+	// 		App.connectToSupabase(); // Uses the global client
+	// 		await App.fetchInitialIncidents(); // Also uses the global client
+	// 		App.loadNotifications();
+	// 		console.log("🚀 incident initialization getting data.");
+	// 		console.log(App.data.allAccidentIncidents);
+	// 		App.populateIncidentsTable(App.data.allAccidentIncidents);
+	// 	} catch (error) {
+	// 		console.error("❌ FATAL ERROR during app initialization:", error);
+	// 	}
+	// });
 	// This is the closing of your main function wrapper
+	// At the VERY BOTTOM of your general.js file
+// This should be the ONLY startup block.
+
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log("DOM is ready. Initializing app...");
+
+    try {
+        // STEP 1: CREATE AND STORE THE CLIENT GLOBALLY
+        const SUPABASE_URL = 'https://joxvwdoogkqjmpwadqna.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpveHZ3ZG9vZ2txam1wd2FkcW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTg3NzQsImV4cCI6MjA2NjE5NDc3NH0.zD5lyn0HrAUUye_sVuxAyJ77VWSkd9UasOXG3Cmo23Q';
+        
+        if (typeof supabase !== 'undefined') {
+            window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            throw new Error("Supabase library did not load.");
+        }
+        console.log("✅ Supabase client created and stored globally.");
+
+        // --- STEP 2: RUN ALL YOUR STARTUP FUNCTIONS ---
+        initGeneralEventListeners();
+        App.connectToSupabase();
+        await App.fetchInitialIncidents(); // 1. Wait for data to load from the database
+        App.loadNotifications();
+
+        // --- THIS IS THE CRITICAL LINE THAT IS LIKELY MISSING ---
+        // 2. Immediately populate the table with the data you just fetched.
+        App.populateIncidentsTable(App.data.allAccidentIncidents);
+		 if (typeof App.initDashboardPage === 'function') {
+            App.initDashboardPage();
+        }
+
+        console.log("🚀 App initialization complete.");
+
+    } catch (error) {
+        console.error("❌ FATAL ERROR during app initialization:", error);
+    }
+});
 })();
